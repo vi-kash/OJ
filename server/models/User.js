@@ -5,15 +5,16 @@ const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    role: {type: String, default: "student"},
     registrationDate: { type: Date, default: Date.now },
     solvedProblems: [
         {
-            problemID: { type: mongoose.Schema.Types.ObjectId, ref: 'Problem' },
+            problemID: { type: mongoose.Schema.Types.ObjectId, ref: "Problem" },
         }
     ],
     participationHistory: [
         {
-            competitionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Competition' },
+            competitionId: { type: mongoose.Schema.Types.ObjectId, ref: "Competition" },
             score: Number,
             rank: Number,
             submissionDate: Date
@@ -21,5 +22,5 @@ const userSchema = new mongoose.Schema({
     ],
 });
 
-export default mongoose.model('User', userSchema);
+export default mongoose.model("User", userSchema);
 
