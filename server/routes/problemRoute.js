@@ -36,4 +36,67 @@ router.post("/addProblem", authenticate, authorizeAdmin, async (req, res) => {
     }
 });
 
+// edit problem route
+router.put("/editProblem/:id", authenticate, authorizeAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            title,
+            description,
+            inputFormat,
+            outputFormat,
+            constraints,
+            sampleInput,
+            sampleOutput,
+            difficulty,
+            testCases
+        } = req.body;
+
+        // Find the problem by ID and update it
+        const updatedProblem = await Problem.findByIdAndUpdate(
+            id,
+            {
+                title,
+                description,
+                inputFormat,
+                outputFormat,
+                constraints,
+                sampleInput,
+                sampleOutput,
+                difficulty,
+                testCases,
+                updatedAt: Date.now()
+            },
+            { new: true }
+        );
+
+        if (!updatedProblem) {
+            return res.status(404).json({ message: "Problem not found" });
+        }
+
+        res.status(200).json({ message: "Problem updated successfully", problem: updatedProblem });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to update problem, error occurred: ", error: error.message });
+    }
+});
+
+// delete problem route
+router.delete("/deleteProblem/:id", authenticate, authorizeAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find the problem by ID and delete it
+        const deletedProblem = await Problem.findByIdAndDelete(id);
+
+        if (!deletedProblem) {
+            return res.status(404).json({ message: "Problem not found" });
+        }
+
+        res.status(200).json({ message: "Problem deleted successfully" });
+    } catch (error) {
+        res.status(500).json({message: "Failed to delete problem, error occurred: ", error: error.message });
+    }
+});
+
+
 export default router;
