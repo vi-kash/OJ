@@ -10,9 +10,9 @@ router.post("/addProblem", authenticate, authorizeAdmin, async (req, res) => {
         // get all the data from the body
         const { title, description, inputFormat, outputFormat, constraints, sampleInput, sampleOutput, difficulty, testCases } = req.body;
 
-        // Validate input
+        // validate input
         if (!(title && description && inputFormat && outputFormat && constraints && sampleInput && sampleOutput && difficulty && Array.isArray(testCases))) {
-            return res.status(400).send({ error: "Invalid input data" });
+            return res.status(400).json({ error: "Please provide all required fields" });
         }
 
         // save problem in the database
@@ -40,41 +40,23 @@ router.post("/addProblem", authenticate, authorizeAdmin, async (req, res) => {
 router.put("/editProblem/:id", authenticate, authorizeAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const {
-            title,
-            description,
-            inputFormat,
-            outputFormat,
-            constraints,
-            sampleInput,
-            sampleOutput,
-            difficulty,
-            testCases
-        } = req.body;
+        const updates = req.body;
 
-        // Find the problem by ID and update it
+        // Add updatedAt field to track when the problem was last updated
+        updates.updatedAt = Date.now();
+
+        // Find the problem by ID and update only the provided fields
         const updatedProblem = await Problem.findByIdAndUpdate(
             id,
-            {
-                title,
-                description,
-                inputFormat,
-                outputFormat,
-                constraints,
-                sampleInput,
-                sampleOutput,
-                difficulty,
-                testCases,
-                updatedAt: Date.now()
-            },
+            { $set: updates },
             { new: true }
         );
 
         if (!updatedProblem) {
-            return res.status(404).json({ message: "Problem not found" });
+            return res.status(404).json({ message: 'Problem not found' });
         }
 
-        res.status(200).json({ message: "Problem updated successfully", problem: updatedProblem });
+        res.status(200).json({ message: 'Problem updated successfully', problem: updatedProblem });
     } catch (error) {
         res.status(500).json({ message: "Failed to update problem, error occurred: ", error: error.message });
     }
@@ -94,7 +76,7 @@ router.delete("/deleteProblem/:id", authenticate, authorizeAdmin, async (req, re
 
         res.status(200).json({ message: "Problem deleted successfully" });
     } catch (error) {
-        res.status(500).json({message: "Failed to delete problem, error occurred: ", error: error.message });
+        res.status(500).json({ message: "Failed to delete problem, error occurred: ", error: error.message });
     }
 });
 

@@ -10,4 +10,4 @@ const contestSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model("Contest", contestSchema);
+export default mongoose.model("Contest", contestSchema);
