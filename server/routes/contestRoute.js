@@ -10,7 +10,7 @@ router.post("/createContest", authenticate, authorizeAdmin, async (req, res) => 
         // get all data from the body
         const { title, description, startDate, endDate, problems, participants } = req.body;
         
-        // contest creater will himself be a participant
+        // contest creator will himself be a participant
         participants.push(req.user.id);
 
         // validate input

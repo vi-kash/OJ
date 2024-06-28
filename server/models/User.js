@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
     ],
     participationHistory: [
         {
-            competitionId: { type: mongoose.Schema.Types.ObjectId, ref: "Competition" },
+            contestId: { type: mongoose.Schema.Types.ObjectId, ref: "Contest" },
             score: Number,
             rank: Number,
             submissionDate: Date
