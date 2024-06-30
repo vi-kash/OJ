@@ -15,7 +15,11 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate } from "react-router-dom";
 import api from "../api.js";
 
-const pages = ["Dashboard", "Problems", "Contests"];
+const pages = [
+  { name: "Dashboard", route: "/" },
+  { name: "Problems", route: "/problemset" },
+  { name: "Contests", route: "/contests" },
+];
 
 function ResponsiveAppBar() {
     const [anchorElNav, setAnchorElNav] = React.useState(null);
@@ -47,8 +51,7 @@ function ResponsiveAppBar() {
                     <Typography
                         variant="h6"
                         noWrap
-                        component="a"
-                        href="#app-bar-with-responsive-menu"
+                        component="div"
                         sx={{
                             mr: 2,
                             display: { xs: "none", md: "flex" },
@@ -92,8 +95,8 @@ function ResponsiveAppBar() {
                             }}
                         >
                             {pages.map((page) => (
-                                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                                    <Typography textAlign="center">{page}</Typography>
+                                <MenuItem key={page.name} onClick={() => { handleCloseNavMenu(); navigate(page.route); }}>
+                                    <Typography textAlign="center">{page.name}</Typography>
                                 </MenuItem>
                             ))}
                         </Menu>
@@ -102,8 +105,7 @@ function ResponsiveAppBar() {
                     <Typography
                         variant="h5"
                         noWrap
-                        component="a"
-                        href="#app-bar-with-responsive-menu"
+                        component="div"
                         sx={{
                             mr: 2,
                             display: { xs: "flex", md: "none" },
@@ -120,11 +122,11 @@ function ResponsiveAppBar() {
                     <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
                         {pages.map((page) => (
                             <Button
-                                key={page}
-                                onClick={handleCloseNavMenu}
+                                key={page.name}
+                                onClick={() => navigate(page.route)}
                                 sx={{ my: 2, color: "white", display: "block" }}
                             >
-                                {page}
+                                {page.name}
                             </Button>
                         ))}
                     </Box>
