@@ -8,6 +8,7 @@ import auth from "./routes/auth.js";
 import problemRoute from "./routes/problemRoute.js";
 import contestRoute from "./routes/contestRoute.js";
 import userRoute from "./routes/userRoute.js";
+import executeRoute from "./routes/executeRoute.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -20,6 +21,7 @@ app.use(auth);
 app.use(problemRoute);
 app.use(contestRoute);
 app.use(userRoute);
+app.use(executeRoute);
 
 DBConnection();
 

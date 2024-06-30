@@ -10,8 +10,10 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import api from "../../api.js";
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
+  const navigate = useNavigate();
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -25,6 +27,7 @@ const SignUp = () => {
     try {
       const response = await api.post("/register", userData);
       console.log(response.data);
+      navigate("/login");
     } catch (error) {
       console.error("Registration failed:", error);
     }
