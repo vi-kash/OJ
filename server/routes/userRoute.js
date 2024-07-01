@@ -19,8 +19,8 @@ router.get("/me", authenticate, async (req, res) => {
                 const problemDetails = await Problem.findById(problem.problemID);
                 return {
                     id: problem.problemID,
-                    title: problemDetails?.title || 'Unknown',
-                    difficulty: problemDetails?.difficulty || 'Unknown'
+                    title: problemDetails?.title || "Unknown",
+                    difficulty: problemDetails?.difficulty || "Unknown"
                 };
             })
         );
@@ -31,7 +31,7 @@ router.get("/me", authenticate, async (req, res) => {
                 const contestDetails = await Contest.findById(contest.contestId);
                 return {
                     id: contest.contestId,
-                    title: contestDetails?.title || 'Unknown',
+                    title: contestDetails?.title || "Unknown",
                     score: contest.score,
                     rank: contest.rank,
                     submissionDate: contest.submissionDate,

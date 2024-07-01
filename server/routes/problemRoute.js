@@ -4,6 +4,16 @@ import { authenticate, authorizeAdmin } from "../middlewares/requireAuth.js"; //
 
 const router = express.Router();
 
+// Get problems route
+router.get("/problems", authenticate, async (req, res) => {
+    try {
+        const problems = await Problem.find({});
+        res.json({problems: problems});
+    } catch (error) {
+        res.status(500).json({ message: "Failed to fetch problems", error: error.message });
+    }
+});
+
 // Add problem route
 router.post("/addProblem", authenticate, authorizeAdmin, async (req, res) => {
     try {
