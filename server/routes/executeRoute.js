@@ -10,7 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const router = express.Router();
 
-export const dirCodes = path.join(__dirname, "..", "programFiles", "codes");
+const dirCodes = path.join(__dirname, "..", "programFiles", "codes");
 
 if (!fs.existsSync(dirCodes)) {
     fs.mkdirSync(dirCodes, { recursive: true });
@@ -24,13 +24,26 @@ const generateFile = async (format, content) => {
     return filePath;
 };
 
+const dirInputs = path.join(__dirname, "..", "programFiles", "inputs");
+
+if(!fs.existsSync(dirInputs)) {
+    fs.mkdirSync(dirInputs, { recursive: true });
+}
+
+const generateInputFile = async (filePath, input) => {
+    const jobID = path.basename(filePath).split(".")[0];
+    const inputPath = path.join(dirInputs, `${jobID}.txt`);
+    fs.writeFileSync(inputPath, input);
+    return inputPath;
+}
+
 const outputPath = path.join(__dirname, "..", "programFiles", "outputs");
 
 if (!fs.existsSync(outputPath)) {
     fs.mkdirSync(outputPath, { recursive: true });
 }
 
-const executeCode = (filePath, language) => {
+const executeCode = (filePath, language, inputPath) => {
     const jobID = path.basename(filePath).split(".")[0];
     const outputFilePath = path.join(outputPath, `${jobID}`);
 
@@ -38,16 +51,16 @@ const executeCode = (filePath, language) => {
         let command;
         switch (language) {
             case "cpp":
-                command = `g++ ${filePath} -o ${outputFilePath}.exe && cd ${outputPath} && .\\${jobID}.exe`;
+                command = `g++ ${filePath} -o ${outputFilePath}.exe && cd ${outputPath} && .\\${jobID}.exe < ${inputPath}`;
                 break;
             case "java":
-                command = `javac ${filePath} && java -cp ${path.dirname(filePath)} ${path.basename(filePath, '.java')}`;
+                command = `javac ${filePath} && java -cp ${path.dirname(filePath)} ${path.basename(filePath, '.java')} < ${inputPath}`;
                 break;
             case "python":
-                command = `python ${filePath}`;
+                command = `python ${filePath} < ${inputPath}`;
                 break;
             case "javascript":
-                command = `node ${filePath}`;
+                command = `node ${filePath} < ${inputPath}`;
                 break;
             default:
                 reject(new Error("Unsupported language"));
@@ -66,7 +79,7 @@ const executeCode = (filePath, language) => {
 };
 
 router.post("/run", authenticate, async (req, res) => {
-    const { language, code } = req.body;
+    const { language, code, input } = req.body;
     if (!code) {
         return res.status(400).json({ success: false, error: "Empty code!" });
     }
@@ -85,11 +98,11 @@ router.post("/run", authenticate, async (req, res) => {
 
     try {
         const filePath = await generateFile(format, code);
-        const output = await executeCode(filePath, language);
+        const inputPath = await generateInputFile(filePath, input);
+        const output = await executeCode(filePath, language, inputPath);
         res.status(200).json({ success: true, output: output });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: "Failed to execute code!", error: error.message });
+        res.status(500).json({ success: false, message: "Failed to execute code!", error: error });
     }
 });
 
