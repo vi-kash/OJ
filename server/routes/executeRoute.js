@@ -30,38 +30,65 @@ if (!fs.existsSync(outputPath)) {
     fs.mkdirSync(outputPath, { recursive: true });
 }
 
-const executeCode = (filePath) => {
+const executeCode = (filePath, language) => {
     const jobID = path.basename(filePath).split(".")[0];
-    const outputFilePath = path.join(outputPath, `${jobID}.exe`);
+    const outputFilePath = path.join(outputPath, `${jobID}`);
 
     return new Promise((resolve, reject) => {
-        exec(
-            `g++ ${filePath} -o ${outputFilePath} && cd ${outputPath} && .\\${jobID}.exe`,
-            (error, stdout, stderr) => {
-                if (error) {
-                    reject({ error, stderr });
-                }
-                if (stderr) {
-                    reject(stderr);
-                }
+        let command;
+        switch (language) {
+            case "cpp":
+                command = `g++ ${filePath} -o ${outputFilePath}.exe && cd ${outputPath} && .\\${jobID}.exe`;
+                break;
+            case "java":
+                command = `javac ${filePath} && java -cp ${path.dirname(filePath)} ${path.basename(filePath, '.java')}`;
+                break;
+            case "python":
+                command = `python ${filePath}`;
+                break;
+            case "javascript":
+                command = `node ${filePath}`;
+                break;
+            default:
+                reject(new Error("Unsupported language"));
+        }
+
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                reject({ error, stderr });
+            } else if (stderr) {
+                reject(stderr);
+            } else {
                 resolve(stdout);
             }
-        );
+        });
     });
 };
 
 router.post("/run", authenticate, async (req, res) => {
     const { language, code } = req.body;
-    if (code === undefined) {
+    if (!code) {
         return res.status(400).json({ success: false, error: "Empty code!" });
     }
 
+    const languageMap = {
+        cpp: "cpp",
+        java: "java",
+        python: "py",
+        javascript: "js",
+    };
+
+    const format = languageMap[language];
+    if (!format) {
+        return res.status(400).json({ success: false, error: "Unsupported language!" });
+    }
+
     try {
-        const filePath = await generateFile(language, code);
-        const output = await executeCode(filePath);
+        const filePath = await generateFile(format, code);
+        const output = await executeCode(filePath, language);
         res.status(200).json({ success: true, output: output });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).json({ success: false, message: "Failed to execute code!", error: error.message });
     }
 });
