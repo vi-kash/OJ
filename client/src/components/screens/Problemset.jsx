@@ -28,9 +28,9 @@ const createData = (id, _id, title, difficulty) => {
         id,
         _id,
         title,
-        difficulty
+        difficulty,
     };
-}
+};
 
 const EnhancedTable = () => {
     const [order, setOrder] = React.useState("asc");
@@ -57,14 +57,15 @@ const EnhancedTable = () => {
                 });
 
                 setUser(response.data.user);
-                console.log(user);
 
                 const res = await api.get("/problems", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
                 const problemsData = res.data.problems;
-                const rowsData = problemsData.map((problem, index) => createData(index + 1, problem._id, problem.title, problem.difficulty));
+                const rowsData = problemsData.map((problem, index) =>
+                    createData(index + 1, problem._id, problem.title, problem.difficulty)
+                );
                 setRows(rowsData);
             } catch (error) {
                 console.error("Failed to fetch data:", error);
@@ -72,7 +73,7 @@ const EnhancedTable = () => {
         };
 
         fetchData();
-    }, [navigate, user]);
+    }, [navigate]);
 
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === "asc";
@@ -100,24 +101,25 @@ const EnhancedTable = () => {
         () =>
             stableSort(rows, getComparator(order, orderBy)).slice(
                 page * rowsPerPage,
-                page * rowsPerPage + rowsPerPage,
+                page * rowsPerPage + rowsPerPage
             ),
-        [order, orderBy, page, rowsPerPage, rows],
+        [order, orderBy, page, rowsPerPage, rows]
     );
 
     return (
         <div className="App">
             <Navbar />
             <Box sx={{ width: "100%" }}>
-                <Card sx={{ margin: "auto", mt: 4, p: 2, textAlign: "center" }}>
+                <Card className="mx-auto mt-4 p-2 text-center">
                     <CardContent>
-                        <Paper sx={{ mb: 2, p: 4 }}>
+                        <Paper className="mb-2 p-4">
                             <EnhancedTableToolbar />
                             <TableContainer>
                                 <Table
                                     sx={{ minWidth: 750 }}
                                     aria-labelledby="tableTitle"
                                     size={dense ? "small" : "medium"}
+                                    className="w-full"
                                 >
                                     <EnhancedTableHead
                                         order={order}
@@ -134,7 +136,7 @@ const EnhancedTable = () => {
                                                     hover
                                                     tabIndex={-1}
                                                     key={row.id}
-                                                    sx={{ cursor: "pointer" }}
+                                                    className="cursor-pointer hover:bg-gray-100"
                                                 >
                                                     <TableCell
                                                         component="th"
@@ -142,11 +144,16 @@ const EnhancedTable = () => {
                                                         scope="row"
                                                         padding="none"
                                                     >
-                                                        <Link to={`/problem/${row._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                                        <Link
+                                                            to={`/problem/${row._id}`}
+                                                            className="text-blue-500 hover:underline"
+                                                        >
                                                             {row.title}
                                                         </Link>
                                                     </TableCell>
-                                                    <TableCell align="left">{row.difficulty}</TableCell>
+                                                    <TableCell align="left">
+                                                        {row.difficulty}
+                                                    </TableCell>
                                                 </TableRow>
                                             );
                                         })}
@@ -155,9 +162,8 @@ const EnhancedTable = () => {
                                                 style={{
                                                     height: (dense ? 33 : 53) * emptyRows,
                                                 }}
-                                            >
-                                                <TableCell colSpan={6} />
-                                            </TableRow>
+                                                colSpan={6}
+                                            />
                                         )}
                                     </TableBody>
                                 </Table>
@@ -173,14 +179,23 @@ const EnhancedTable = () => {
                             />
                         </Paper>
                         <FormControlLabel
-                            control={<Switch checked={dense} onChange={handleChangeDense} />}
+                            control={
+                                <Switch
+                                    checked={dense}
+                                    onChange={handleChangeDense}
+                                />
+                            }
                             label="Dense padding"
                         />
                     </CardContent>
                 </Card>
                 {user && user.role === "admin" && (
-                    <Box mt={4} display="flex" justifyContent="center">
-                        <Button variant="contained" color="primary" onClick={() => navigate("/addQuestion")}>
+                    <Box mt={4} className="flex justify-center">
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => navigate("/addQuestion")}
+                        >
                             Add Question
                         </Button>
                     </Box>
@@ -188,7 +203,7 @@ const EnhancedTable = () => {
             </Box>
         </div>
     );
-}
+};
 
 const descendingComparator = (a, b, orderBy) => {
     if (b[orderBy] < a[orderBy]) {
@@ -198,13 +213,13 @@ const descendingComparator = (a, b, orderBy) => {
         return 1;
     }
     return 0;
-}
+};
 
 const getComparator = (order, orderBy) => {
     return order === "desc"
         ? (a, b) => descendingComparator(a, b, orderBy)
         : (a, b) => -descendingComparator(a, b, orderBy);
-}
+};
 
 const stableSort = (array, comparator) => {
     const stabilizedThis = array.map((el, index) => [el, index]);
@@ -216,7 +231,7 @@ const stableSort = (array, comparator) => {
         return a[1] - b[1];
     });
     return stabilizedThis.map((el) => el[0]);
-}
+};
 
 const headCells = [
     {
@@ -230,7 +245,7 @@ const headCells = [
         numeric: false,
         disablePadding: false,
         label: "Difficulty",
-    }
+    },
 ];
 
 const EnhancedTableHead = (props) => {
@@ -257,7 +272,9 @@ const EnhancedTableHead = (props) => {
                             {headCell.label}
                             {orderBy === headCell.id ? (
                                 <Box component="span" sx={visuallyHidden}>
-                                    {order === "desc" ? "sorted descending" : "sorted ascending"}
+                                    {order === "desc"
+                                        ? "sorted descending"
+                                        : "sorted ascending"}
                                 </Box>
                             ) : null}
                         </TableSortLabel>
@@ -266,7 +283,7 @@ const EnhancedTableHead = (props) => {
             </TableRow>
         </TableHead>
     );
-}
+};
 
 EnhancedTableHead.propTypes = {
     onRequestSort: PropTypes.func.isRequired,
@@ -297,6 +314,6 @@ const EnhancedTableToolbar = () => {
             </Tooltip>
         </Toolbar>
     );
-}
+};
 
 export default EnhancedTable;

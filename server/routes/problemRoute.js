@@ -8,9 +8,19 @@ const router = express.Router();
 router.get("/problems", authenticate, async (req, res) => {
     try {
         const problems = await Problem.find({});
-        res.json({problems: problems});
+        res.json({ problems: problems });
     } catch (error) {
         res.status(500).json({ message: "Failed to fetch problems", error: error.message });
+    }
+});
+
+// Get a specific problem
+router.get("/problem/:id", authenticate, async (req, res) => {
+    try {
+        const problem = await Problem.findById(req.params.id);
+        res.json({ problem: problem });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to fetch problem", error: error.message });
     }
 });
 

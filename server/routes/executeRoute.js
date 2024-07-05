@@ -51,7 +51,7 @@ const executeCode = (filePath, language, inputPath) => {
         let command;
         switch (language) {
             case "cpp":
-                command = `g++ ${filePath} -o ${outputFilePath}.out && cd ${outputPath} && ./${jobID}.out < ${inputPath}`;
+                command = `g++ ${filePath} -o ${outputFilePath}.exe && cd ${outputPath} && .\\${jobID}.exe < ${inputPath}`;
                 break;
             case "java":
                 command = `javac ${filePath} && java -cp ${path.dirname(filePath)} ${path.basename(filePath, '.java')} < ${inputPath}`;
