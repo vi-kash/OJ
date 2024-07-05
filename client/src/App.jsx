@@ -4,6 +4,8 @@ import Login from "./components/screens/Login.jsx";
 import Dashboard from "./components/screens/Dashboard.jsx";
 import Problemset from "./components/screens/Problemset.jsx";
 import Problem from "./components/screens/Problem.jsx";
+import AddQuestionForm from "./components/screens/AddQuestionForm.jsx";
+import EditQuestionForm from "./components/screens/EditQuestionForm.jsx";
 import "./App.css";
 
 const App = () => {
@@ -15,6 +17,8 @@ const App = () => {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/problemset" element={<Problemset />} />
                 <Route path="/problem/:id" element={<Problem />} />
+                <Route path="/addQuestion" element={<AddQuestionForm />} />
+                <Route path="/editProblem/:id" element={<EditQuestionForm />} />
             </Routes>
         </BrowserRouter>
     );

@@ -1,6 +1,19 @@
+/* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Grid, Card, Container, Typography, CircularProgress, Select, MenuItem, FormControl, InputLabel, TextField, Button } from "@mui/material";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+    Grid,
+    Card,
+    Container,
+    Typography,
+    CircularProgress,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    TextField,
+    Button
+} from "@mui/material";
 import api from "../../api.js";
 import Navbar from "../Navbar.jsx";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -10,7 +23,9 @@ import { classNames } from "../../utils";
 
 const Problem = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [problem, setProblem] = useState(null);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
         const fetchProblem = async () => {
@@ -25,8 +40,33 @@ const Problem = () => {
             }
         };
 
+        const checkAdminStatus = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const response = await api.get("/me", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setIsAdmin(response.data.user.role === "admin");
+            } catch (error) {
+                console.error("Failed to check admin status:", error);
+            }
+        };
+
         fetchProblem();
+        checkAdminStatus();
     }, [id]);
+
+    const handleDelete = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            await api.delete(`/deleteProblem/${id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            navigate("/problemset");
+        } catch (error) {
+            console.error("Failed to delete problem:", error);
+        }
+    };
 
     if (!problem) {
         return (
@@ -72,17 +112,35 @@ const Problem = () => {
                     </Grid>
                     <Grid item xs={12} md={6}>
                         <Card elevation={3} style={{ padding: 20, marginTop: 20 }}>
-                            <CodeEditorComponent problemId={id} sampleInput={problem.sampleInput} />
+                            <CodeEditorComponent problem={problem} />
                         </Card>
                     </Grid>
                 </Grid>
+                {isAdmin && (
+                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20, marginBottom: 25 }}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => navigate(`/editProblem/${id}`)}
+                            style={{ marginRight: 10 }}
+                        >
+                            Edit Problem
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="secondary"
+                            onClick={handleDelete}
+                        >
+                            Delete Problem
+                        </Button>
+                    </div>
+                )}
             </Container>
         </div>
     );
 };
 
-// eslint-disable-next-line react/prop-types
-const CodeEditorComponent = ({ problemId, sampleInput }) => {
+const CodeEditorComponent = ({ problem }) => {
     const [code, setCode] = useState(
         `#include <bits/stdc++.h>
 using namespace std;
@@ -93,7 +151,7 @@ int main() {
 }`
     );
     const [language, setLanguage] = useState("cpp");
-    const [input, setInput] = useState(sampleInput || "");
+    const [input, setInput] = useState(problem.sampleInput || "");
     const [output, setOutput] = useState("");
 
     const handleLanguageChange = (event) => {
@@ -125,13 +183,14 @@ int main() {
     const handleSubmit = async () => {
         try {
             const token = localStorage.getItem("token");
-            const response = await api.post(`/submit/${problemId}`, {
+            const response = await api.post(`/submit/${problem.id}`, {
                 code,
                 language,
+                problem,
             }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            setOutput(response.data.output);
+            console.log(response.data);
         } catch (error) {
             console.error("Failed to submit code:", error);
         }

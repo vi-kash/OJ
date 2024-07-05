@@ -26,7 +26,7 @@ const generateFile = async (format, content) => {
 
 const dirInputs = path.join(__dirname, "..", "programFiles", "inputs");
 
-if(!fs.existsSync(dirInputs)) {
+if (!fs.existsSync(dirInputs)) {
     fs.mkdirSync(dirInputs, { recursive: true });
 }
 
@@ -103,6 +103,51 @@ router.post("/run", authenticate, async (req, res) => {
         res.status(200).json({ success: true, output: output });
     } catch (error) {
         res.status(500).json({ success: false, message: "Failed to execute code!", error: error });
+    }
+});
+
+router.post("/submit/:id", authenticate, async (req, res) => {
+    const { id } = req.params;
+    const { language, code, problem } = req.body;
+
+    if (!code) {
+        return res.status(400).json({ success: false, error: "Empty code!" });
+    }
+
+    const languageMap = {
+        cpp: "cpp",
+        java: "java",
+        python: "py",
+        javascript: "js",
+    };
+
+    const format = languageMap[language];
+    if (!format) {
+        return res.status(400).json({ success: false, error: "Unsupported language!" });
+    }
+
+    try {
+        const testCases = problem.testCases;
+
+        const filePath = await generateFile(format, code);
+
+        for (let i = 0; i < testCases.length; i++) {
+            const inputPath = await generateInputFile(filePath, testCases[i].input);
+            const output = await executeCode(filePath, language, inputPath);
+
+            if (output.trim() !== testCases[i].output.trim()) {
+                return res.status(200).json({
+                    success: false,
+                    status: `WA on testcase ${i + 1}`,
+                    output: output.trim(),
+                    expected: testCases[i].output.trim(),
+                });
+            }
+        }
+
+        res.status(200).json({ success: true, status: "Accepted" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Failed to submit code!", error: error });
     }
 });
 
