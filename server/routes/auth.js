@@ -9,30 +9,24 @@ const router = express.Router();
 
 router.post("/register", async (req, res) => {
     try {
-        //get all the data from body
         const { name, username, email, password } = req.body;
 
-        // check that all the data should exists
         if (!(name && username && email && password)) {
             return res.status(400).send("Please enter all the information");
         }
 
-        // check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(200).send("User already exists!");
+            return res.status(409).send("User already exists!");
         }
 
-        // check if the username is already taken
         const existingUsername = await User.findOne({ username });
         if (existingUsername) {
-            return res.status(200).send("Username already taken, please try another!");
+            return res.status(409).send("Username already taken, please try another!");
         }
 
-        // encrypt the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // save the user in DB
         const user = await User.create({
             name,
             username,
@@ -40,17 +34,15 @@ router.post("/register", async (req, res) => {
             password: hashedPassword,
         });
 
-        // generate a token for user and send it
         const token = jwt.sign({ id: user._id, email, username }, process.env.SECRET_KEY, {
             expiresIn: "1d",
         });
         user.token = token;
         user.password = undefined;
-        res
-            .status(200)
-            .json({ message: "You have successfully registered!", user });
+        res.status(201).json({ message: "You have successfully registered!", user });
     } catch (error) {
         console.log("Error occurred during registration ", error.message);
+        res.status(500).send("An error occurred while registering. Please try again.");
     }
 });
 
@@ -96,6 +88,7 @@ router.post("/login", async (req, res) => {
         });
     } catch (error) {
         console.log(error.message);
+        res.status(500).send("An error occurred while logging in");
     }
 });
 

@@ -16,10 +16,7 @@ import {
 } from "@mui/material";
 import api from "../../api.js";
 import Navbar from "../Navbar.jsx";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-import CodeEditor from "react-simple-code-editor";
-import { classNames } from "../../utils";
+import { Editor } from "@monaco-editor/react";
 
 const Problem = () => {
     const { id } = useParams();
@@ -158,12 +155,6 @@ int main() {
         setLanguage(event.target.value);
     };
 
-    const highlightCode = (code) => (
-        <SyntaxHighlighter language={language} style={materialDark}>
-            {code}
-        </SyntaxHighlighter>
-    );
-
     const handleRun = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -215,23 +206,16 @@ int main() {
                     </Select>
                 </FormControl>
             </div>
-            <CodeEditor
-                value={code}
-                onValueChange={(code) => setCode(code)}
-                highlight={(code) => highlightCode(code)}
-                padding={10}
-                style={{
+            <Editor
+                height="300px"
+                defaultLanguage={language}
+                defaultValue={code}
+                onChange={(value) => setCode(value)}
+                theme="vs-dark"
+                options={{
                     fontFamily: '"Fira code", "Fira Mono", monospace',
                     fontSize: 14,
-                    backgroundColor: "#2a2734",
-                    height: "300px",
-                    overflow: "auto",
                 }}
-                className={classNames(
-                    "rounded-lg shadow-md",
-                    "text-white",
-                    "overflow-x-auto"
-                )}
             />
             <Grid marginTop={2} container spacing={2} className="my-4">
                 <Grid item xs={6}>

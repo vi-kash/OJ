@@ -12,6 +12,9 @@
   "dependencies": {
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
+    "@fontsource/roboto": "^5.0.13",
+    "@fontsource/roboto-slab": "^5.0.20",
+    "@monaco-editor/react": "^4.6.0",
     "@mui/icons-material": "^5.15.20",
     "@mui/material": "^5.15.20",
     "axios": "^1.7.2",
@@ -20,7 +23,8 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.24.0",
     "react-simple-code-editor": "^0.14.0",
-    "react-syntax-highlighter": "^15.5.0"
+    "react-syntax-highlighter": "^15.5.0",
+    "react-toastify": "^10.0.5"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",

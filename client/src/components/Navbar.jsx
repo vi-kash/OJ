@@ -9,16 +9,19 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Container from "@mui/material/Container";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
-import AdbIcon from "@mui/icons-material/Adb";
 import CodeIcon from "@mui/icons-material/Code";
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate } from "react-router-dom";
 import api from "../api.js";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import '@fontsource/roboto'; 
+import '@fontsource/roboto-slab'; 
 
 const pages = [
-  { name: "Dashboard", route: "/" },
-  { name: "Problems", route: "/problemset" },
-  { name: "Contests", route: "/contests" },
+    { name: "Dashboard", route: "/" },
+    { name: "Problems", route: "/problemset" },
+    { name: "Contests", route: "/contests" },
 ];
 
 function ResponsiveAppBar() {
@@ -38,13 +41,15 @@ function ResponsiveAppBar() {
             await api.post("/logout");
             localStorage.removeItem("token");
             navigate("/login");
+            toast.success("Logout successful!");
         } catch (error) {
             console.error("Logout failed:", error);
+            toast.error("Logout failed. Please try again.");
         }
     };
 
     return (
-        <AppBar position="static">
+        <AppBar position="static" sx={{ backgroundColor: "#333" }}>
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
                     <CodeIcon sx={{ display: { xs: "none", md: "flex" }, mr: 1 }} />
@@ -55,14 +60,14 @@ function ResponsiveAppBar() {
                         sx={{
                             mr: 2,
                             display: { xs: "none", md: "flex" },
-                            fontFamily: "monospace",
+                            fontFamily: "Roboto Slab, serif",
                             fontWeight: 700,
                             letterSpacing: ".3rem",
                             color: "inherit",
                             textDecoration: "none",
                         }}
                     >
-                        OJ
+                        CodeSpace
                     </Typography>
 
                     <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
@@ -96,12 +101,12 @@ function ResponsiveAppBar() {
                         >
                             {pages.map((page) => (
                                 <MenuItem key={page.name} onClick={() => { handleCloseNavMenu(); navigate(page.route); }}>
-                                    <Typography textAlign="center">{page.name}</Typography>
+                                    <Typography textAlign="center" sx={{ fontFamily: "Roboto, sans-serif" }}>{page.name}</Typography>
                                 </MenuItem>
                             ))}
                         </Menu>
                     </Box>
-                    <AdbIcon sx={{ display: { xs: "flex", md: "none" }, mr: 1 }} />
+                    <CodeIcon sx={{ display: { xs: "flex", md: "none" }, mr: 1 }} />
                     <Typography
                         variant="h5"
                         noWrap
@@ -110,45 +115,33 @@ function ResponsiveAppBar() {
                             mr: 2,
                             display: { xs: "flex", md: "none" },
                             flexGrow: 1,
-                            fontFamily: "monospace",
+                            fontFamily: "Roboto Slab, serif",
                             fontWeight: 700,
                             letterSpacing: ".3rem",
                             color: "inherit",
                             textDecoration: "none",
                         }}
                     >
-                        LOGO
+                        CodeSpace
                     </Typography>
                     <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
                         {pages.map((page) => (
                             <Button
                                 key={page.name}
                                 onClick={() => navigate(page.route)}
-                                sx={{ my: 2, color: "white", display: "block" }}
+                                sx={{ my: 2, color: "white", display: "block", fontFamily: "Roboto, sans-serif" }}
                             >
                                 {page.name}
                             </Button>
                         ))}
                     </Box>
 
-                    <Box sx={{ flexGrow: 0 }}>
-                        <IconButton color="inherit" onClick={handleLogout}>
-                            <LogoutIcon sx={{ display: { xs: "none", md: "flex" }, mr: 1 }} />
-                            <Typography
-                                variant="h6"
-                                noWrap
-                                component="div"
-                                sx={{
-                                    display: { xs: "none", md: "flex" },
-                                    fontFamily: "monospace",
-                                    fontWeight: 700,
-                                    letterSpacing: ".3rem",
-                                    color: "inherit",
-                                }}
-                            >
-                                Logout
-                            </Typography>
-                        </IconButton>
+                    <Box sx={{ flexGrow: 0 }} onClick={handleLogout}>
+
+                        <Button variant="outlined" color="error">
+                            {<LogoutIcon />}
+                            Logout
+                        </Button>
                     </Box>
                 </Toolbar>
             </Container>
