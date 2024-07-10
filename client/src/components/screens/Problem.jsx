@@ -12,7 +12,7 @@ import {
     FormControl,
     InputLabel,
     TextField,
-    Button
+    Button,
 } from "@mui/material";
 import api from "../../api.js";
 import Navbar from "../Navbar.jsx";
@@ -23,6 +23,8 @@ const Problem = () => {
     const navigate = useNavigate();
     const [problem, setProblem] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [loading, setLoading] = useState(true); // State for loading indicator
+    const [error, setError] = useState(null); // State for error handling
 
     useEffect(() => {
         const fetchProblem = async () => {
@@ -32,8 +34,11 @@ const Problem = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setProblem(response.data.problem);
+                setLoading(false); // Update loading state
             } catch (error) {
                 console.error("Failed to fetch problem:", error);
+                setLoading(false); // Update loading state
+                setError("Failed to fetch problem. Please try again."); // Set error message
             }
         };
 
@@ -62,10 +67,11 @@ const Problem = () => {
             navigate("/problemset");
         } catch (error) {
             console.error("Failed to delete problem:", error);
+            setError("Failed to delete problem. Please try again."); // Set error message
         }
     };
 
-    if (!problem) {
+    if (loading) {
         return (
             <Container>
                 <CircularProgress />
@@ -74,52 +80,223 @@ const Problem = () => {
         );
     }
 
+    if (error) {
+        return (
+            <Container>
+                <Typography variant="h5" color="error" gutterBottom>
+                    Error: {error}
+                </Typography>
+            </Container>
+        );
+    }
+
     return (
         <div>
             <Navbar />
-            <Container>
-                <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
-                        <Card elevation={3} style={{ padding: 20, marginTop: 20 }}>
-                            <Typography variant="h4" component="h1" gutterBottom>
-                                {problem.title}
-                            </Typography>
-                            <Typography variant="body1" component="p">
-                                {problem.description}
-                            </Typography>
-                            <Typography variant="body1" component="p">
-                                <strong>Difficulty:</strong> {problem.difficulty}
-                            </Typography>
-                            <Typography variant="body1" component="p">
-                                <strong>Input Format:</strong> {problem.inputFormat}
-                            </Typography>
-                            <Typography variant="body1" component="p">
-                                <strong>Output Format:</strong> {problem.outputFormat}
-                            </Typography>
-                            <Typography variant="body1" component="p">
-                                <strong>Constraints:</strong> {problem.constraints}
-                            </Typography>
-                            <Typography variant="body1" component="p">
-                                <strong>Sample Input:</strong> {problem.sampleInput}
-                            </Typography>
-                            <Typography variant="body1" component="p">
-                                <strong>Sample Output:</strong> {problem.sampleOutput}
-                            </Typography>
-                        </Card>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <Card elevation={3} style={{ padding: 20, marginTop: 20 }}>
-                            <CodeEditorComponent problem={problem} />
-                        </Card>
-                    </Grid>
-                </Grid>
+            <div
+                style={{
+                    width: "100%",
+                    minHeight: "100vh",
+                    padding: 16,
+                    backgroundColor: "#f0f4f8",
+                }}
+            >
+                <div style={{ display: "flex", gap: 16 }}>
+                    <Card
+                        elevation={3}
+                        style={{
+                            flex: "2 2 40%",
+                            padding: 20,
+                            marginTop: 20,
+                            backgroundColor: "#f5f5f5",
+                            borderRadius: 16,
+                        }}
+                    >
+                        <Typography
+                            variant="h4"
+                            component="h1"
+                            gutterBottom
+                            style={{
+                                fontFamily: "Roboto Slab, serif",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            {problem.title}
+                        </Typography>
+                        <Typography
+                            variant="body1"
+                            component="p"
+                            style={{
+                                marginBottom: 20,
+                                fontFamily: "Arial, sans-serif",
+                                fontSize: "1.1rem",
+                            }}
+                        >
+                            {problem.description}
+                        </Typography>
+                        <Typography
+                            variant="h6"
+                            component="h2"
+                            style={{
+                                fontFamily: "Arial, sans-serif",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            Difficulty:
+                        </Typography>
+                        <Typography
+                            variant="body1"
+                            component="p"
+                            style={{
+                                marginBottom: 20,
+                                fontFamily: "Arial, sans-serif",
+                                fontSize: "1rem",
+                            }}
+                        >
+                            {problem.difficulty}
+                        </Typography>
+                        <Typography
+                            variant="h6"
+                            component="h2"
+                            style={{
+                                fontFamily: "Arial, sans-serif",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            Input Format:
+                        </Typography>
+                        <Typography
+                            variant="body1"
+                            component="p"
+                            style={{
+                                marginBottom: 20,
+                                fontFamily: "Arial, sans-serif",
+                                fontSize: "1rem",
+                                whiteSpace: "pre-line",
+                            }}
+                        >
+                            {problem.inputFormat}
+                        </Typography>
+                        <Typography
+                            variant="h6"
+                            component="h2"
+                            style={{
+                                fontFamily: "Arial, sans-serif",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            Output Format:
+                        </Typography>
+                        <Typography
+                            variant="body1"
+                            component="p"
+                            style={{
+                                marginBottom: 20,
+                                fontFamily: "Arial, sans-serif",
+                                fontSize: "1rem",
+                                whiteSpace: "pre-line",
+                            }}
+                        >
+                            {problem.outputFormat}
+                        </Typography>
+                        <Typography
+                            variant="h6"
+                            component="h2"
+                            style={{
+                                fontFamily: "Arial, sans-serif",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            Constraints:
+                        </Typography>
+                        <Typography
+                            variant="body1"
+                            component="p"
+                            style={{
+                                marginBottom: 20,
+                                fontFamily: "Arial, sans-serif",
+                                fontSize: "1rem",
+                                whiteSpace: "pre-line",
+                            }}
+                        >
+                            {problem.constraints}
+                        </Typography>
+                        <Typography
+                            variant="h6"
+                            component="h2"
+                            style={{
+                                fontFamily: "Arial, sans-serif",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            Sample Input:
+                        </Typography>
+                        <Typography
+                            variant="body1"
+                            component="p"
+                            style={{
+                                marginBottom: 20,
+                                fontFamily: "Arial, sans-serif",
+                                fontSize: "1rem",
+                                whiteSpace: "pre-line",
+                            }}
+                        >
+                            {problem.sampleInput}
+                        </Typography>
+                        <Typography
+                            variant="h6"
+                            component="h2"
+                            style={{
+                                fontFamily: "Arial, sans-serif",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            Sample Output:
+                        </Typography>
+                        <Typography
+                            variant="body1"
+                            component="p"
+                            style={{
+                                marginBottom: 20,
+                                fontFamily: "Arial, sans-serif",
+                                fontSize: "1rem",
+                                whiteSpace: "pre-line",
+                            }}
+                        >
+                            {problem.sampleOutput}
+                        </Typography>
+                    </Card>
+                    <Card
+                        elevation={3}
+                        style={{
+                            flex: "3 3 60%",
+                            padding: 20,
+                            marginTop: 20,
+                            backgroundColor: "#f5f5f5",
+                            borderRadius: 16,
+                        }}
+                    >
+                        <CodeEditorComponent problem={problem} />
+                    </Card>
+                </div>
                 {isAdmin && (
-                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20, marginBottom: 25 }}>
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            marginTop: 20,
+                            marginBottom: 25,
+                        }}
+                    >
                         <Button
                             variant="contained"
                             color="primary"
                             onClick={() => navigate(`/editProblem/${id}`)}
-                            style={{ marginRight: 10 }}
+                            style={{
+                                marginRight: 10,
+                                backgroundColor: "#4f4f4f",
+                                color: "#fff",
+                            }}
                         >
                             Edit Problem
                         </Button>
@@ -127,12 +304,16 @@ const Problem = () => {
                             variant="contained"
                             color="secondary"
                             onClick={handleDelete}
+                            style={{
+                                backgroundColor: "#d32f2f",
+                                color: "#fff",
+                            }}
                         >
                             Delete Problem
                         </Button>
                     </div>
                 )}
-            </Container>
+            </div>
         </div>
     );
 };
@@ -150,6 +331,9 @@ int main() {
     const [language, setLanguage] = useState("cpp");
     const [input, setInput] = useState(problem.sampleInput || "");
     const [output, setOutput] = useState("");
+    const [verdict, setVerdict] = useState(null); // State for verdict
+    const [running, setRunning] = useState(false);
+    const [error, setError] = useState(null); // State for error messages
 
     const handleLanguageChange = (event) => {
         setLanguage(event.target.value);
@@ -157,6 +341,7 @@ int main() {
 
     const handleRun = async () => {
         try {
+            setRunning(true);
             const token = localStorage.getItem("token");
             const response = await api.post("/run", {
                 code,
@@ -166,13 +351,18 @@ int main() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setOutput(response.data.output);
+            setError(null); // Clear any previous errors
         } catch (error) {
             console.error("Failed to run code:", error);
+            setError("Failed to run code. Please try again."); // Set error message
+        } finally {
+            setRunning(false);
         }
     };
 
     const handleSubmit = async () => {
         try {
+            setRunning(true);
             const token = localStorage.getItem("token");
             const response = await api.post(`/submit/${problem.id}`, {
                 code,
@@ -181,9 +371,13 @@ int main() {
             }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log(response.data);
+            setVerdict(response.data.status); // Update verdict based on submission response
+            setError(null); // Clear any previous errors
         } catch (error) {
             console.error("Failed to submit code:", error);
+            setError("Failed to submit code. Please try again."); // Set error message
+        } finally {
+            setRunning(false);
         }
     };
 
@@ -207,7 +401,7 @@ int main() {
                 </FormControl>
             </div>
             <Editor
-                height="300px"
+                height="600px"
                 defaultLanguage={language}
                 defaultValue={code}
                 onChange={(value) => setCode(value)}
@@ -240,12 +434,56 @@ int main() {
                         readOnly
                     />
                 </Grid>
+                {verdict && (
+                    <Grid item xs={12}>
+                        <TextField
+                            label="Verdict"
+                            multiline
+                            rows={4}
+                            variant="outlined"
+                            fullWidth
+                            value={verdict}
+                            readOnly
+                            style={{ marginTop: 20 }}
+                        />
+                    </Grid>
+                )}
+                {error && (
+                    <Grid item xs={12}>
+                        <TextField
+                            label="Error"
+                            multiline
+                            rows={4}
+                            variant="outlined"
+                            fullWidth
+                            value={error}
+                            readOnly
+                            style={{ marginTop: 20, borderColor: "#d32f2f", borderWidth: 2 }}
+                        />
+                    </Grid>
+                )}
             </Grid>
             <div className="flex justify-center mt-4">
-                <Button variant="contained" color="primary" onClick={handleRun} style={{ marginRight: 10 }}>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleRun}
+                    style={{
+                        marginRight: 10,
+                        backgroundColor: "#4f4f4f",
+                        color: "#fff",
+                    }}
+                    disabled={running}
+                >
                     Run
                 </Button>
-                <Button variant="contained" color="secondary" onClick={handleSubmit}>
+                <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={handleSubmit}
+                    style={{ backgroundColor: "#d32f2f", color: "#fff" }}
+                    disabled={running}
+                >
                     Submit
                 </Button>
             </div>
