@@ -96,13 +96,22 @@ const AddQuestionForm = () => {
     };
 
     return (
-        <div>
+        <div style={{ backgroundColor: "#f0f4f8" }}>
             <Navbar />
             <Container className="mt-8">
-                <Card elevation={3} className="p-6">
-                    <Typography variant="h4" component="h1" gutterBottom>
+                <Card elevation={3} className="p-6" style={{ backgroundColor: "#f5f5f5" }}>
+                    <Typography
+                        variant="h4"
+                        component="h1"
+                        gutterBottom
+                        style={{
+                            fontFamily: 'Roboto Slab, serif',
+                            fontWeight: 'bold',
+                        }}
+                    >
                         Add New Question
                     </Typography>
+
                     <form onSubmit={handleSubmit}>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
@@ -232,12 +241,25 @@ const AddQuestionForm = () => {
                                     variant="contained"
                                     color="primary"
                                     onClick={handleAddTestCase}
+                                    style={{
+                                        marginRight: 10,
+                                        backgroundColor: "#4f4f4f",
+                                        color: "#fff",
+                                    }}
                                 >
                                     Add Test Case
                                 </Button>
                             </Grid>
                             <Grid item xs={12} className="flex justify-center mt-4">
-                                <Button variant="contained" color="primary" type="submit">
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    type="submit"
+                                    style={{
+                                        backgroundColor: "#d32f2f",
+                                        color: "#fff",
+                                    }}
+                                >
                                     Submit
                                 </Button>
                             </Grid>

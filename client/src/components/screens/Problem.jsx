@@ -17,6 +17,8 @@ import {
 import api from "../../api.js";
 import Navbar from "../Navbar.jsx";
 import { Editor } from "@monaco-editor/react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Problem = () => {
     const { id } = useParams();
@@ -64,10 +66,11 @@ const Problem = () => {
             await api.delete(`/deleteProblem/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
+            toast.success("Problem deleted successfully!");
             navigate("/problemset");
         } catch (error) {
             console.error("Failed to delete problem:", error);
-            setError("Failed to delete problem. Please try again."); // Set error message
+            toast.error("Failed to delete problem. Please try again.");
         }
     };
 
@@ -96,20 +99,31 @@ const Problem = () => {
             <div
                 style={{
                     width: "100%",
-                    minHeight: "100vh",
+                    height: "100vh",
                     padding: 16,
                     backgroundColor: "#f0f4f8",
+                    display: "flex",
+                    flexDirection: "column", // Flex direction column for main container
                 }}
             >
-                <div style={{ display: "flex", gap: 16 }}>
+                <div
+                    style={{
+                        display: "flex",
+                        flex: "1 1 auto", // Flex 1 1 auto for flexible resizing
+                        overflow: "hidden", // Prevent overflow of the entire container
+                        gap: 10, // Gap between left and right halves
+                    }}
+                >
                     <Card
                         elevation={3}
                         style={{
                             flex: "2 2 40%",
                             padding: 20,
                             marginTop: 20,
+                            marginBottom: 10,
                             backgroundColor: "#f5f5f5",
                             borderRadius: 16,
+                            overflow: "auto",
                         }}
                     >
                         <Typography
@@ -272,8 +286,10 @@ const Problem = () => {
                             flex: "3 3 60%",
                             padding: 20,
                             marginTop: 20,
+                            marginBottom: 10,
                             backgroundColor: "#f5f5f5",
                             borderRadius: 16,
+                            overflow: "auto",
                         }}
                     >
                         <CodeEditorComponent problem={problem} />
@@ -352,9 +368,12 @@ int main() {
             });
             setOutput(response.data.output);
             setError(null); // Clear any previous errors
+            setVerdict(null);
         } catch (error) {
             console.error("Failed to run code:", error);
             setError("Failed to run code. Please try again."); // Set error message
+            setOutput("");
+            setVerdict(null);
         } finally {
             setRunning(false);
         }
@@ -373,6 +392,7 @@ int main() {
             });
             setVerdict(response.data.status); // Update verdict based on submission response
             setError(null); // Clear any previous errors
+            setOutput("");
         } catch (error) {
             console.error("Failed to submit code:", error);
             setError("Failed to submit code. Please try again."); // Set error message
