@@ -62,6 +62,10 @@ const Dashboard = () => {
                       <tr>
                         <th className="border-b-2 pb-2">Title</th>
                         <th className="border-b-2 pb-2 text-right">Difficulty</th>
+                        <th className="border-b-2 pb-2 text-right">Accuracy</th>
+                        <th className="border-b-2 pb-2 text-right">Total Submissions</th>
+                        <th className="border-b-2 pb-2 text-right">Language</th>
+                        <th className="border-b-2 pb-2 text-right">Submission Date</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -74,7 +78,21 @@ const Dashboard = () => {
                                 {problem.title}
                               </Link>
                             </td>
-                            <td className="py-2 text-right">{problem.difficulty}</td>
+                            <td className="py-2 text-right">
+                              {problem.difficulty}
+                            </td>
+                            <td className="py-2 text-right">
+                              {(problem.acceptedCount / problem.totalSubmissions).toFixed(2)}
+                            </td>
+                            <td className="py-2 text-right">
+                              {problem.totalSubmissions}
+                            </td>
+                            <td className="py-2 text-right">
+                              {problem.language}
+                            </td>
+                            <td className="py-2 text-right">
+                              {new Date(problem.submissionDate).toLocaleDateString()}
+                            </td>
                           </tr>
                         ))}
 

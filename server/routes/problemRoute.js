@@ -1,6 +1,7 @@
 import express from "express";
 import Problem from "../models/Problem.js";
 import { authenticate, authorizeAdmin } from "../middlewares/requireAuth.js"; // Middleware for authentication and authorization
+import User from "../models/User.js";
 
 const router = express.Router();
 
@@ -34,6 +35,8 @@ router.post("/addProblem", authenticate, authorizeAdmin, async (req, res) => {
         if (!(title && description && inputFormat && outputFormat && constraints && sampleInput && sampleOutput && difficulty && Array.isArray(testCases))) {
             return res.status(400).json({ error: "Please provide all required fields" });
         }
+        
+        const user = await User.findById(req.user.id);
 
         // save problem in the database
         const problem = await Problem.create({
@@ -45,7 +48,8 @@ router.post("/addProblem", authenticate, authorizeAdmin, async (req, res) => {
             sampleInput,
             sampleOutput,
             difficulty,
-            testCases
+            testCases,
+            author: user.username
         });
 
         res

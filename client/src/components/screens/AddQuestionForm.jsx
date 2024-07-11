@@ -14,6 +14,8 @@ import {
 } from "@mui/material";
 import api from "../../api.js";
 import Navbar from "../Navbar.jsx";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AddQuestionForm = () => {
     const navigate = useNavigate();
@@ -89,8 +91,10 @@ const AddQuestionForm = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
+            toast.success("Problem added successfully!");
             navigate("/problemset");
         } catch (error) {
+            toast.error("Failed to add problem, please try again!");
             console.error("Failed to add problem:", error);
         }
     };

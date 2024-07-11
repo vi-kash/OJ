@@ -25,8 +25,8 @@ const Problem = () => {
     const navigate = useNavigate();
     const [problem, setProblem] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
-    const [loading, setLoading] = useState(true); // State for loading indicator
-    const [error, setError] = useState(null); // State for error handling
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchProblem = async () => {
@@ -36,11 +36,11 @@ const Problem = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setProblem(response.data.problem);
-                setLoading(false); // Update loading state
+                setLoading(false);
             } catch (error) {
                 console.error("Failed to fetch problem:", error);
-                setLoading(false); // Update loading state
-                setError("Failed to fetch problem. Please try again."); // Set error message
+                setLoading(false);
+                setError("Failed to fetch problem. Please try again.");
             }
         };
 
@@ -109,9 +109,9 @@ const Problem = () => {
                 <div
                     style={{
                         display: "flex",
-                        flex: "1 1 auto", // Flex 1 1 auto for flexible resizing
+                        flex: "1 1 auto",
                         overflow: "hidden", // Prevent overflow of the entire container
-                        gap: 10, // Gap between left and right halves
+                        gap: 10,
                     }}
                 >
                     <Card
@@ -347,9 +347,9 @@ int main() {
     const [language, setLanguage] = useState("cpp");
     const [input, setInput] = useState(problem.sampleInput || "");
     const [output, setOutput] = useState("");
-    const [verdict, setVerdict] = useState(null); // State for verdict
+    const [verdict, setVerdict] = useState(null);
     const [running, setRunning] = useState(false);
-    const [error, setError] = useState(null); // State for error messages
+    const [error, setError] = useState(null);
 
     const handleLanguageChange = (event) => {
         setLanguage(event.target.value);
@@ -367,11 +367,11 @@ int main() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setOutput(response.data.output);
-            setError(null); // Clear any previous errors
+            setError(null);
             setVerdict(null);
         } catch (error) {
             console.error("Failed to run code:", error);
-            setError("Failed to run code. Please try again."); // Set error message
+            setError("Failed to run code. Please try again.");
             setOutput("");
             setVerdict(null);
         } finally {
@@ -383,19 +383,20 @@ int main() {
         try {
             setRunning(true);
             const token = localStorage.getItem("token");
-            const response = await api.post(`/submit/${problem.id}`, {
+            const response = await api.post(`/submit/${problem._id}`, {
                 code,
                 language,
                 problem,
             }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            setVerdict(response.data.status); // Update verdict based on submission response
-            setError(null); // Clear any previous errors
+            setVerdict(response.data.status);
+            setError(null);
             setOutput("");
         } catch (error) {
             console.error("Failed to submit code:", error);
-            setError("Failed to submit code. Please try again."); // Set error message
+            setError("Failed to submit code. Please try again.");
+            setOutput("");
         } finally {
             setRunning(false);
         }

@@ -5,6 +5,8 @@ import path, { dirname } from "path";
 import { v4 as uuid } from "uuid";
 import { exec } from "child_process";
 import { fileURLToPath } from "url";
+import Problem from "../models/Problem.js";
+import User from "../models/User.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -95,7 +97,7 @@ router.post("/run", authenticate, async (req, res) => {
     try {
         const filePath = await generateFile(format, code);
         const inputPath = await generateInputFile(filePath, input);
-        
+
         // Execute code and handle errors
         try {
             const output = await executeCode(filePath, language, inputPath);
@@ -118,6 +120,7 @@ router.post("/run", authenticate, async (req, res) => {
 router.post("/submit/:id", authenticate, async (req, res) => {
     const { id } = req.params;
     const { language, code, problem } = req.body;
+    const user = await User.findById(req.user.id);
 
     if (!code) {
         return res.status(400).json({ success: false, error: "Empty code!" });
@@ -147,6 +150,17 @@ router.post("/submit/:id", authenticate, async (req, res) => {
                 output = await executeCode(filePath, language, inputPath);
             } catch (error) {
                 if (error.type === "runtime") {
+                    await Problem.findByIdAndUpdate(id, {
+                        $push: {
+                            submissions: {
+                                user: user.username,
+                                result: "Runtime Error",
+                                language,
+                                code,
+                                submissionDate: Date.now()
+                            },
+                        },
+                    });
                     return res.status(200).json({
                         success: false,
                         status: `Runtime Error on testcase ${i + 1}`,
@@ -154,12 +168,34 @@ router.post("/submit/:id", authenticate, async (req, res) => {
                         stderr: error.stderr,
                     });
                 } else if (error.type === "compilation") {
+                    await Problem.findByIdAndUpdate(id, {
+                        $push: {
+                            submissions: {
+                                user: user.username,
+                                result: "Compilation Error",
+                                language,
+                                code,
+                                submissionDate: Date.now()
+                            },
+                        },
+                    });
                     return res.status(200).json({
                         success: false,
                         status: "Compilation Error",
                         error: error.error,
                     });
                 } else {
+                    await Problem.findByIdAndUpdate(id, {
+                        $push: {
+                            submissions: {
+                                user: user.username,
+                                result: "Execution Error",
+                                language,
+                                code,
+                                submissionDate: Date.now()
+                            },
+                        },
+                    });
                     return res.status(500).json({
                         success: false,
                         message: "Failed to execute code!",
@@ -169,6 +205,17 @@ router.post("/submit/:id", authenticate, async (req, res) => {
             }
 
             if (output.trim() !== testCases[i].output.trim()) {
+                await Problem.findByIdAndUpdate(id, {
+                    $push: {
+                        submissions: {
+                            user: user.username,
+                            result: `WA on testcase ${i + 1}`,
+                            language,
+                            code,
+                            submissionDate: Date.now()
+                        },
+                    },
+                });
                 return res.status(200).json({
                     success: false,
                     status: `WA on testcase ${i + 1}`,
@@ -177,6 +224,42 @@ router.post("/submit/:id", authenticate, async (req, res) => {
                 });
             }
         }
+
+        // If all the test cases pass
+        // Check if the problem is already in the user's solvedProblems list
+        const user = await User.findById(req.user.id);
+        const isProblemSolved = user.solvedProblems.some(
+            solvedProblem => solvedProblem.problemID.toString() === id.toString()
+        );
+
+        if (!isProblemSolved) {
+            // If the problem is not already in the solvedProblems list, add it
+            await User.findByIdAndUpdate(req.user.id, {
+                $push: {
+                    solvedProblems: {
+                        problemID: id,
+                        language,
+                        submissionDate: Date.now()
+                    },
+                },
+            });
+        }
+
+        // Add the successful submission to the problem's submissions list
+        await Problem.findByIdAndUpdate(id, {
+            $push: {
+                submissions: {
+                    user: user.username,
+                    result: "Accepted",
+                    language,
+                    code,
+                    submissionDate: Date.now()
+                },
+            },
+            $inc: {
+                acceptedCount: 1
+            }
+        });
 
         res.status(200).json({ success: true, status: "Accepted" });
     } catch (error) {

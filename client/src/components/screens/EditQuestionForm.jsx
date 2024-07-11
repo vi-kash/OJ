@@ -16,6 +16,8 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import api from "../../api.js";
 import Navbar from "../Navbar.jsx";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const EditQuestionForm = () => {
     const { id } = useParams();
@@ -121,8 +123,10 @@ const EditQuestionForm = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
+            toast.success("Problem updated successfully!");
             navigate("/problemset");
         } catch (error) {
+            toast.error("Failed to update problem, please try again!");
             console.error("Failed to update problem:", error);
         }
     };

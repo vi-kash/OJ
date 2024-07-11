@@ -20,7 +20,12 @@ router.get("/me", authenticate, async (req, res) => {
                 return {
                     id: problem.problemID,
                     title: problemDetails?.title || "Unknown",
-                    difficulty: problemDetails?.difficulty || "Unknown"
+                    difficulty: problemDetails?.difficulty || "Unknown",
+                    author: problemDetails?.author || "Unknown",
+                    totalSubmissions: problemDetails?.submissions.length || 0,
+                    acceptedCount: problemDetails?.acceptedCount || 0,
+                    language: problem.language,
+                    submissionDate: problem.submissionDate
                 };
             })
         );
@@ -28,9 +33,9 @@ router.get("/me", authenticate, async (req, res) => {
         // Fetching contest participation details
         const participatedContests = await Promise.all(
             user.participationHistory.map(async (contest) => {
-                const contestDetails = await Contest.findById(contest.contestId);
+                const contestDetails = await Contest.findById(contest.contestID);
                 return {
-                    id: contest.contestId,
+                    id: contest.contestID,
                     title: contestDetails?.title || "Unknown",
                     score: contest.score,
                     rank: contest.rank,

@@ -25,12 +25,15 @@ import Navbar from "../Navbar.jsx";
 import SearchIcon from "@mui/icons-material/Search";
 import '@fontsource/roboto-slab';
 
-const createData = (id, _id, title, difficulty) => {
+const createData = (id, _id, title, difficulty, accuracy, totalSubmissions, author) => {
     return {
         id,
         _id,
         title,
         difficulty,
+        accuracy,
+        totalSubmissions,
+        author,
     };
 };
 
@@ -44,6 +47,7 @@ const EnhancedTable = () => {
     const [filteredRows, setFilteredRows] = React.useState([]);
     const [searchTerm, setSearchTerm] = React.useState("");
 
+    const [problems, setProblems] = React.useState([]);
     const navigate = useNavigate();
     const [user, setUser] = React.useState(null);
 
@@ -66,9 +70,17 @@ const EnhancedTable = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                const problemsData = res.data.problems;
-                const rowsData = problemsData.map((problem, index) =>
-                    createData(index + 1, problem._id, problem.title, problem.difficulty)
+                setProblems(res.data.problems);
+                const rowsData = problems.map((problem, index) =>
+                    createData(
+                        index + 1,
+                        problem._id,
+                        problem.title,
+                        problem.difficulty,
+                        (problem.acceptedCount / problem.submissions.length).toFixed(2),
+                        problem.submissions.length,
+                        problem.author
+                    )
                 );
                 setRows(rowsData);
                 setFilteredRows(rowsData);
@@ -78,7 +90,7 @@ const EnhancedTable = () => {
         };
 
         fetchData();
-    }, [navigate]);
+    }, [navigate, problems]);
 
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === "asc";
@@ -167,6 +179,9 @@ const EnhancedTable = () => {
                                                         </Link>
                                                     </TableCell>
                                                     <TableCell align="left">{row.difficulty}</TableCell>
+                                                    <TableCell align="left">{row.accuracy}</TableCell>
+                                                    <TableCell align="left">{row.totalSubmissions}</TableCell>
+                                                    <TableCell align="left">{row.author}</TableCell>
                                                 </TableRow>
                                             );
                                         })}
@@ -255,6 +270,24 @@ const headCells = [
         disablePadding: false,
         label: "Difficulty",
     },
+    {
+        id: "accuracy",
+        numeric: false,
+        disablePadding: false,
+        label: "Accuracy",
+    },
+    {
+        id: "totalSubmissions",
+        numeric: true,
+        disablePadding: false,
+        label: "Total Submissions",
+    },
+    {
+        id: "author",
+        numeric: false,
+        disablePadding: false,
+        label: "Author",
+    },
 ];
 
 const EnhancedTableHead = (props) => {
@@ -269,7 +302,7 @@ const EnhancedTableHead = (props) => {
                 {headCells.map((headCell) => (
                     <TableCell
                         key={headCell.id}
-                        align={headCell.numeric ? "right" : "left"}
+                        align="left"
                         padding={headCell.disablePadding ? "none" : "normal"}
                         sortDirection={orderBy === headCell.id ? order : false}
                     >
