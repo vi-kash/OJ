@@ -13,14 +13,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const router = express.Router();
 
 // Directory setup for storing code files, inputs, and outputs
+const dirFiles = path.join(__dirname, "..", "programFiles");
 const dirCodes = path.join(__dirname, "..", "programFiles", "codes");
 const dirInputs = path.join(__dirname, "..", "programFiles", "inputs");
-const outputPath = path.join(__dirname, "..", "programFiles", "outputs");
+const dirOutputs = path.join(__dirname, "..", "programFiles", "outputs");
 
 // Ensure directories exist or create them if they don't
+fs.mkdirSync(dirFiles, { recursive: true });
 fs.mkdirSync(dirCodes, { recursive: true });
 fs.mkdirSync(dirInputs, { recursive: true });
-fs.mkdirSync(outputPath, { recursive: true });
+fs.mkdirSync(dirOutputs, { recursive: true });
 
 // Function to generate a code file
 const generateFile = async (format, content) => {
@@ -42,13 +44,13 @@ const generateInputFile = async (filePath, input) => {
 // Function to execute code based on language
 const executeCode = (filePath, language, inputPath) => {
     const jobID = path.basename(filePath).split(".")[0];
-    const outputFilePath = path.join(outputPath, `${jobID}`);
+    const outputFilePath = path.join(dirOutputs, `${jobID}`);
 
     return new Promise((resolve, reject) => {
         let command;
         switch (language) {
             case "cpp":
-                command = `g++ ${filePath} -o ${outputFilePath}.exe && cd ${outputPath} && .\\${jobID}.exe < ${inputPath}`;
+                command = `g++ ${filePath} -o ${outputFilePath}.exe && cd ${dirOutputs} && .\\${jobID}.exe < ${inputPath}`;
                 break;
             case "java":
                 command = `javac ${filePath} && java -cp ${path.dirname(filePath)} ${path.basename(filePath, '.java')} < ${inputPath}`;
@@ -227,7 +229,6 @@ router.post("/submit/:id", authenticate, async (req, res) => {
 
         // If all the test cases pass
         // Check if the problem is already in the user's solvedProblems list
-        const user = await User.findById(req.user.id);
         const isProblemSolved = user.solvedProblems.some(
             solvedProblem => solvedProblem.problemID.toString() === id.toString()
         );
@@ -264,6 +265,7 @@ router.post("/submit/:id", authenticate, async (req, res) => {
         res.status(200).json({ success: true, status: "Accepted" });
     } catch (error) {
         res.status(500).json({ success: false, message: "Failed to submit code!", error: error });
+        console.log(error);
     }
 });
 

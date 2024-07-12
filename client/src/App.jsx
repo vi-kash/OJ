@@ -8,6 +8,8 @@ import Problemset from './components/screens/Problemset.jsx';
 import Problem from './components/screens/Problem.jsx';
 import AddQuestionForm from './components/screens/AddQuestionForm.jsx';
 import EditQuestionForm from './components/screens/EditQuestionForm.jsx';
+import MySubmissions from "./components/screens/MySubmissions.jsx";
+import AllSubmissions from "./components/screens/AllSubmissions.jsx";
 import './App.css';
 
 const App = () => {
@@ -22,6 +24,8 @@ const App = () => {
                 <Route path="/problem/:id" element={<Problem />} />
                 <Route path="/addQuestion" element={<AddQuestionForm />} />
                 <Route path="/editProblem/:id" element={<EditQuestionForm />} />
+                <Route path="/mySubmissions/:id" element={<MySubmissions />} />
+                <Route path="/allSubmissions/:id" element={<AllSubmissions />} />
             </Routes>
         </BrowserRouter>
     );

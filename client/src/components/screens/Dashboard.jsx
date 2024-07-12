@@ -46,7 +46,7 @@ const Dashboard = () => {
     <div>
       <Navbar />
       <Box sx={{ backgroundColor: "#f0f4f8", minHeight: "100vh", p: 2 }}>
-        <Container maxWidth="md">
+        <Container>
           <Card sx={{ backgroundColor: "white", borderRadius: 10, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', marginBottom: 4, padding: 3 }}>
             <Typography variant="h4" align="center" gutterBottom>Welcome, {user.name}</Typography>
             <Typography variant="h6" align="center" gutterBottom>Username: {user.username}</Typography>
@@ -54,7 +54,7 @@ const Dashboard = () => {
           </Card>
           <Grid container spacing={4}>
             <Grid item xs={12}>
-              <Card sx={{ backgroundColor: "white", borderRadius: 10, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', padding: 3 }}>
+              <Card sx={{ backgroundColor: "white", borderRadius: 10, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', padding: 3, width: '100%', overflowX: 'auto' }}>
                 <Typography variant="h5" align="center" gutterBottom>Solved Questions</Typography>
                 <div style={{ overflowX: 'auto' }}>
                   <table className="w-full text-left">
@@ -102,7 +102,7 @@ const Dashboard = () => {
               </Card>
             </Grid>
             <Grid item xs={12}>
-              <Card sx={{ backgroundColor: "white", borderRadius: 10, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', padding: 3 }}>
+              <Card sx={{ backgroundColor: "white", borderRadius: 10, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', padding: 3, width: '100%', overflowX: 'auto' }}>
                 <Typography variant="h5" align="center" gutterBottom>Participated Contests</Typography>
                 <div style={{ overflowX: 'auto' }}>
                   <table className="w-full text-left">

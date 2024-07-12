@@ -137,6 +137,42 @@ const Problem = () => {
                         >
                             {problem.title}
                         </Typography>
+                        <Card
+                            elevation={2}
+                            style={{
+                                display: 'inline-block',
+                                padding: 10,
+                                marginBottom: 20,
+                                backgroundColor: "#DCDCDC",
+                                borderRadius: 12,
+                            }}
+                        >
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                size="small"
+                                onClick={() => navigate(`/mySubmissions/${id}`)}
+                                style={{
+                                    marginRight: 10,
+                                    backgroundColor: "#4f4f4f",
+                                    color: "#fff",
+                                }}
+                            >
+                                My Submissions
+                            </Button>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                size="small"
+                                onClick={() => navigate(`/allSubmissions/${id}`)}
+                                style={{
+                                    backgroundColor: "#d32f2f",
+                                    color: "#fff",
+                                }}
+                            >
+                                All Submissions
+                            </Button>
+                        </Card>
                         <Typography
                             variant="body1"
                             component="p"

@@ -17,38 +17,42 @@ import Tooltip from "@mui/material/Tooltip";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { Button, Card, CardContent, InputBase } from "@mui/material";
+import { Card, CardContent } from "@mui/material";
 import { visuallyHidden } from "@mui/utils";
-import { useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../../api.js";
 import Navbar from "../Navbar.jsx";
-import SearchIcon from "@mui/icons-material/Search";
 import '@fontsource/roboto-slab';
+import CodeIcon from '@mui/icons-material/Code';
+import CodeModal from "../CodeModal.jsx";
 
-const createData = (id, _id, title, difficulty, accuracy, totalSubmissions, author) => {
+const createData = (id, user, result, language, submissionDate, code) => {
     return {
         id,
-        _id,
-        title,
-        difficulty,
-        accuracy,
-        totalSubmissions,
-        author,
+        user,
+        result,
+        language,
+        submissionDate,
+        code,
     };
 };
 
 const EnhancedTable = () => {
+    const { id } = useParams();
+
     const [order, setOrder] = React.useState("asc");
     const [orderBy, setOrderBy] = React.useState("calories");
     const [page, setPage] = React.useState(0);
     const [dense, setDense] = React.useState(false);
     const [rowsPerPage, setRowsPerPage] = React.useState(5);
-    const [rows, setRows] = React.useState([]);
     const [filteredRows, setFilteredRows] = React.useState([]);
-    const [searchTerm, setSearchTerm] = React.useState("");
 
     const navigate = useNavigate();
-    const [user, setUser] = React.useState(null);
+    const [username, setUsername] = React.useState("");
+    const [problem, setProblem] = React.useState([]);
+    const [open, setOpen] = React.useState(false);
+    const [currentCode, setCurrentCode] = React.useState("");
+    const [currentResult, setCurrentResult] = React.useState("");
 
     React.useEffect(() => {
         const fetchData = async () => {
@@ -63,24 +67,27 @@ const EnhancedTable = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                setUser(response.data.user);
+                setUsername(response.data.user.username);
 
-                const res = await api.get("/problems", {
+                const res = await api.get(`/problem/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                const rowsData = res.data.problems.map((problem, index) =>
+                setProblem(res.data.problem);
+
+                const submissions = res.data.problem.submissions;
+                const mySubmissions = submissions.filter((submission) => submission.user === username);
+
+                const rowsData = mySubmissions.map((submission, index) =>
                     createData(
                         index,
-                        problem._id,
-                        problem.title,
-                        problem.difficulty,
-                        (problem.acceptedCount / problem.submissions.length).toFixed(2),
-                        problem.submissions.length,
-                        problem.author
+                        submission.user,
+                        submission.result,
+                        submission.language,
+                        submission.submissionDate,
+                        submission.code,
                     )
                 );
-                setRows(rowsData);
                 setFilteredRows(rowsData);
             } catch (error) {
                 console.error("Failed to fetch data:", error);
@@ -88,7 +95,7 @@ const EnhancedTable = () => {
         };
 
         fetchData();
-    }, [navigate]);
+    }, [id, navigate, username]);
 
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === "asc";
@@ -121,14 +128,14 @@ const EnhancedTable = () => {
         [order, orderBy, page, rowsPerPage, filteredRows]
     );
 
-    const handleSearch = (event) => {
-        const searchTerm = event.target.value.toLowerCase();
-        setSearchTerm(searchTerm);
-        const filtered = rows.filter((row) =>
-            row.title.toLowerCase().includes(searchTerm)
-        );
-        setFilteredRows(filtered);
-        setPage(0);
+    const handleOpen = (code, result) => {
+        setCurrentCode(code);
+        setCurrentResult(result);
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
     };
 
     return (
@@ -138,7 +145,7 @@ const EnhancedTable = () => {
                 <Card className="mx-auto mt-4 p-2 text-center" sx={{ backgroundColor: "#f2f2f2" }}>
                     <CardContent>
                         <Paper className="mb-2 p-4" sx={{ backgroundColor: "white", borderRadius: 10, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-                            <EnhancedTableToolbar handleSearch={handleSearch} searchTerm={searchTerm} />
+                            <EnhancedTableToolbar />
                             <TableContainer>
                                 <Table
                                     sx={{ minWidth: 750 }}
@@ -163,6 +170,7 @@ const EnhancedTable = () => {
                                                     key={row.id}
                                                     className="cursor-pointer hover:bg-gray-100"
                                                 >
+                                                    <TableCell align="left">{row.user}</TableCell>
                                                     <TableCell
                                                         component="th"
                                                         id={labelId}
@@ -170,16 +178,33 @@ const EnhancedTable = () => {
                                                         padding="none"
                                                     >
                                                         <Link
-                                                            to={`/problem/${row._id}`}
+                                                            to={`/problem/${id}`}
                                                             className="text-blue-500 hover:underline"
                                                         >
-                                                            {row.title}
+                                                            {problem.title}
                                                         </Link>
                                                     </TableCell>
-                                                    <TableCell align="left">{row.difficulty}</TableCell>
-                                                    <TableCell align="left">{row.accuracy}</TableCell>
-                                                    <TableCell align="left">{row.totalSubmissions}</TableCell>
-                                                    <TableCell align="left">{row.author}</TableCell>
+                                                    <TableCell align="left">{row.result}</TableCell>
+                                                    <TableCell align="left">{row.language}</TableCell>
+                                                    <TableCell align="left">{new Date(row.submissionDate).toLocaleDateString()}</TableCell>
+                                                    <TableCell align="left">
+                                                        <IconButton
+                                                            onClick={() => handleOpen(row.code, row.result)}
+                                                            sx={{
+                                                                backgroundColor: 'red',
+                                                                color: 'white',
+                                                                padding: '5px 10px',
+                                                                borderRadius: '10px',
+                                                                '&:hover': {
+                                                                    backgroundColor: 'darkred',
+                                                                },
+                                                                minWidth: '30px',
+                                                                minHeight: '30px',
+                                                            }}
+                                                        >
+                                                            <CodeIcon />
+                                                        </IconButton>
+                                                    </TableCell>
                                                 </TableRow>
                                             );
                                         })}
@@ -210,19 +235,8 @@ const EnhancedTable = () => {
                         />
                     </CardContent>
                 </Card>
-                {user && user.role === "admin" && (
-                    <Box mt={4} className="flex justify-center">
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={() => navigate("/addQuestion")}
-                            sx={{ backgroundColor: "#333333", color: "#ffffff" }}
-                        >
-                            Add Question
-                        </Button>
-                    </Box>
-                )}
             </Box>
+            <CodeModal open={open} handleClose={handleClose} code={currentCode} result={currentResult}/>
         </div>
     );
 };
@@ -257,34 +271,40 @@ const stableSort = (array, comparator) => {
 
 const headCells = [
     {
-        id: "title",
+        id: "user",
         numeric: false,
         disablePadding: true,
-        label: "Title",
+        label: "User",
     },
     {
-        id: "difficulty",
+        id: "problem",
         numeric: false,
         disablePadding: false,
-        label: "Difficulty",
+        label: "Problem",
     },
     {
-        id: "accuracy",
+        id: "result",
         numeric: false,
         disablePadding: false,
-        label: "Accuracy",
+        label: "Result",
     },
     {
-        id: "totalSubmissions",
+        id: "language",
         numeric: true,
         disablePadding: false,
-        label: "Total Submissions",
+        label: "Language",
     },
     {
-        id: "author",
+        id: "submissionDate",
         numeric: false,
         disablePadding: false,
-        label: "Author",
+        label: "Submission Date",
+    },
+    {
+        id: "code",
+        numeric: false,
+        disablePadding: false,
+        label: "Code",
     },
 ];
 
@@ -329,7 +349,7 @@ EnhancedTableHead.propTypes = {
     orderBy: PropTypes.string.isRequired,
 };
 
-const EnhancedTableToolbar = ({ handleSearch, searchTerm }) => {
+const EnhancedTableToolbar = () => {
     return (
         <Toolbar
             sx={{
@@ -349,23 +369,8 @@ const EnhancedTableToolbar = ({ handleSearch, searchTerm }) => {
                 id="tableTitle"
                 component="div"
             >
-                Problemset
+                My Submissions
             </Typography>
-            <Paper
-                component="form"
-                sx={{ p: "2px 4px", display: "flex", alignItems: "center", maxWidth: 400, borderRadius: 5, backgroundColor: '#ffffff' }}
-            >
-                <InputBase
-                    sx={{ ml: 1, flex: 1 }}
-                    placeholder="Search Problems"
-                    inputProps={{ "aria-label": "search problems" }}
-                    value={searchTerm}
-                    onChange={handleSearch}
-                />
-                <IconButton type="submit" sx={{ p: "10px" }} aria-label="search">
-                    <SearchIcon />
-                </IconButton>
-            </Paper>
             <Tooltip title="Filter list">
                 <IconButton>
                     <FilterListIcon />
@@ -373,11 +378,6 @@ const EnhancedTableToolbar = ({ handleSearch, searchTerm }) => {
             </Tooltip>
         </Toolbar>
     );
-};
-
-EnhancedTableToolbar.propTypes = {
-    handleSearch: PropTypes.func.isRequired,
-    searchTerm: PropTypes.string.isRequired,
 };
 
 export default EnhancedTable;
