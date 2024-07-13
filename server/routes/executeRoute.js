@@ -34,32 +34,40 @@ const generateFile = async (format, content) => {
 };
 
 // Function to generate an input file
-const generateInputFile = async (filePath, input) => {
+const generateInputFile = async (filePath, input, index) => {
     const jobID = path.basename(filePath).split(".")[0];
-    const inputPath = path.join(dirInputs, `${jobID}.txt`);
+    const inputPath = path.join(dirInputs, `${jobID}_${index}.txt`);
     fs.writeFileSync(inputPath, input);
     return inputPath;
 };
 
-// Function to execute code based on language
-const executeCode = (filePath, language, inputPath) => {
-    const jobID = path.basename(filePath).split(".")[0];
-    const outputFilePath = path.join(dirOutputs, `${jobID}`);
+// Function to extract the public class name from a Java file
+const extractPublicClassName = (filePath) => {
+    const fileContent = fs.readFileSync(filePath, "utf-8");
+    const match = fileContent.match(/public\s+class\s+(\w+)/);
+    if (match) {
+        return match[1];
+    } else {
+        throw new Error("No public class found in the Java file");
+    }
+};
 
+// Function to execute code based on language
+const executeCode = (filePath, language, inputPath, timeLimit = 5, memoryLimit = "256m") => {
     return new Promise((resolve, reject) => {
         let command;
         switch (language) {
             case "cpp":
-                command = `g++ ${filePath} -o ${outputFilePath}.exe && cd ${dirOutputs} && .\\${jobID}.exe < ${inputPath}`;
+                command = `docker run --rm --memory=${memoryLimit} --cpus=1 --ulimit cpu=${timeLimit} --volume ${filePath}:/code/code.cpp --volume ${inputPath}:/input.txt cpp-docker sh -c "g++ /code/code.cpp -o /code/code.out && /code/code.out < /input.txt"`;
                 break;
             case "java":
-                command = `javac ${filePath} && java -cp ${path.dirname(filePath)} ${path.basename(filePath, '.java')} < ${inputPath}`;
+                command = `docker run --rm --memory=${memoryLimit} --cpus=1 --ulimit cpu=${timeLimit} --volume ${filePath}:/code/Main.java --volume ${inputPath}:/input.txt java-docker sh -c "javac /code/Main.java && java -cp /code Main < /input.txt"`;
                 break;
             case "python":
-                command = `python ${filePath} < ${inputPath}`;
+                command = `docker run --rm --memory=${memoryLimit} --cpus=1 --ulimit cpu=${timeLimit} --volume ${filePath}:/code/code.py --volume ${inputPath}:/code/input.txt python-docker`;
                 break;
             case "javascript":
-                command = `node ${filePath} < ${inputPath}`;
+                command = `docker run --rm --memory=${memoryLimit} --cpus=1 --ulimit cpu=${timeLimit} --volume ${filePath}:/code/code.js --volume ${inputPath}:/code/input.txt node-docker`;
                 break;
             default:
                 reject(new Error("Unsupported language"));
@@ -67,13 +75,33 @@ const executeCode = (filePath, language, inputPath) => {
 
         exec(command, (error, stdout, stderr) => {
             if (error) {
-                reject({ type: "runtime", error, stderr });
+                // Check if error is due to TLE
+                if (error.signal === "SIGKILL") {
+                    reject({ type: "TLE", error, stderr: "Time Limit Exceeded" });
+                } else {
+                    reject({ type: "runtime", error, stderr });
+                }
             } else if (stderr) {
                 reject({ type: "compilation", error: stderr });
             } else {
                 resolve(stdout);
             }
         });
+    });
+};
+
+// Function to clean up old files
+const cleanupFiles = () => {
+    const files = fs.readdirSync(dirCodes);
+    files.forEach(file => {
+        const filePath = path.join(dirCodes, file);
+        fs.unlinkSync(filePath);
+    });
+
+    const inputFiles = fs.readdirSync(dirInputs);
+    inputFiles.forEach(file => {
+        const filePath = path.join(dirInputs, file);
+        fs.unlinkSync(filePath);
     });
 };
 
@@ -98,17 +126,31 @@ router.post("/run", authenticate, async (req, res) => {
 
     try {
         const filePath = await generateFile(format, code);
-        const inputPath = await generateInputFile(filePath, input);
+        let finalFilePath = filePath;
+
+        if (language === "java") {
+            // Extract the public class name and rename the file
+            const publicClassName = extractPublicClassName(filePath);
+            finalFilePath = path.join(path.dirname(filePath), `${publicClassName}.java`);
+            fs.renameSync(filePath, finalFilePath);
+        }
+
+        const inputPath = await generateInputFile(filePath, input, 0);
 
         // Execute code and handle errors
         try {
-            const output = await executeCode(filePath, language, inputPath);
+            const output = await executeCode(finalFilePath, language, inputPath);
             res.status(200).json({ success: true, output: output });
+
+            // Clean up files after execution
+            cleanupFiles();
         } catch (error) {
             if (error.type === "compilation") {
                 res.status(400).json({ success: false, error: "Compilation Error", message: error.error });
             } else if (error.type === "runtime") {
                 res.status(400).json({ success: false, error: "Runtime Error", message: error.error.message, stderr: error.stderr });
+            } else if (error.type === "TLE") {
+                res.status(400).json({ success: false, error: "Time Limit Exceeded", stderr: error.stderr });
             } else {
                 res.status(500).json({ success: false, message: "Failed to execute code!", error: error });
             }
@@ -144,19 +186,28 @@ router.post("/submit/:id", authenticate, async (req, res) => {
         const testCases = problem.testCases;
 
         const filePath = await generateFile(format, code);
+        let finalFilePath = filePath;
+
+        if (language === "java") {
+            // Extract the public class name and rename the file
+            const publicClassName = extractPublicClassName(filePath);
+            finalFilePath = path.join(path.dirname(filePath), `${publicClassName}.java`);
+            fs.renameSync(filePath, finalFilePath);
+        }
 
         for (let i = 0; i < testCases.length; i++) {
-            const inputPath = await generateInputFile(filePath, testCases[i].input);
+            const inputPath = await generateInputFile(filePath, testCases[i].input, i);
             let output;
             try {
-                output = await executeCode(filePath, language, inputPath);
+                output = await executeCode(finalFilePath, language, inputPath);
             } catch (error) {
                 if (error.type === "runtime") {
+                    console.log(error);
                     await Problem.findByIdAndUpdate(id, {
                         $push: {
                             submissions: {
                                 user: user.username,
-                                result: "Runtime Error",
+                                result: `Runtime Error on testcase ${i + 1}`,
                                 language,
                                 code,
                                 submissionDate: Date.now()
@@ -186,6 +237,23 @@ router.post("/submit/:id", authenticate, async (req, res) => {
                         status: "Compilation Error",
                         error: error.error,
                     });
+                } else if (error.type === "TLE") {
+                    await Problem.findByIdAndUpdate(id, {
+                        $push: {
+                            submissions: {
+                                user: user.username,
+                                result: `Time Limit Exceeded on testcase ${i + 1}`,
+                                language,
+                                code,
+                                submissionDate: Date.now()
+                            },
+                        },
+                    });
+                    return res.status(200).json({
+                        success: false,
+                        status: `Time Limit Exceeded on testcase ${i + 1}`,
+                        error: error.stderr,
+                    });
                 } else {
                     await Problem.findByIdAndUpdate(id, {
                         $push: {
@@ -200,7 +268,7 @@ router.post("/submit/:id", authenticate, async (req, res) => {
                     });
                     return res.status(500).json({
                         success: false,
-                        message: "Failed to execute code!",
+                        status: `Failed to execute code on testcase ${i + 1}`,
                         error: error,
                     });
                 }
@@ -220,9 +288,9 @@ router.post("/submit/:id", authenticate, async (req, res) => {
                 });
                 return res.status(200).json({
                     success: false,
-                    status: `WA on testcase ${i + 1}`,
+                    status: `Wrong Answer on testcase ${i + 1}`,
+                    expectedOutput: testCases[i].output.trim(),
                     output: output.trim(),
-                    expected: testCases[i].output.trim(),
                 });
             }
         }
@@ -263,9 +331,11 @@ router.post("/submit/:id", authenticate, async (req, res) => {
         });
 
         res.status(200).json({ success: true, status: "Accepted" });
+
+        // Clean up files after submission
+        cleanupFiles();
     } catch (error) {
         res.status(500).json({ success: false, message: "Failed to submit code!", error: error });
-        console.log(error);
     }
 });
 
