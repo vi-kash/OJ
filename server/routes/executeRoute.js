@@ -75,14 +75,18 @@ const executeCode = (filePath, language, inputPath, timeLimit = 5, memoryLimit =
 
         exec(command, (error, stdout, stderr) => {
             if (error) {
-                // Check if error is due to TLE
-                if (error.signal === "SIGKILL") {
-                    reject({ type: "TLE", error, stderr: "Time Limit Exceeded" });
+                // console.log("error", error.code);
+                // console.log("stderr", stderr);
+                
+                if (error.code === 1) {
+                    reject({ type: "compilation", stderr });
+                } else if (error.code === 137) {
+                    reject({ type: "TLE", stderr });
+                } else if (error.code === 139) {
+                    reject({ type: "MLE", stderr });
                 } else {
-                    reject({ type: "runtime", error, stderr });
+                    reject({ type: "runtime", stderr });
                 }
-            } else if (stderr) {
-                reject({ type: "compilation", error: stderr });
             } else {
                 resolve(stdout);
             }
@@ -140,23 +144,26 @@ router.post("/run", authenticate, async (req, res) => {
         // Execute code and handle errors
         try {
             const output = await executeCode(finalFilePath, language, inputPath);
-            res.status(200).json({ success: true, output: output });
+            res.status(200).json({ success: true, result: output, message: "Successfully executed" });
 
-            // Clean up files after execution
             cleanupFiles();
         } catch (error) {
             if (error.type === "compilation") {
-                res.status(400).json({ success: false, error: "Compilation Error", message: error.error });
-            } else if (error.type === "runtime") {
-                res.status(400).json({ success: false, error: "Runtime Error", message: error.error.message, stderr: error.stderr });
+                res.status(200).json({ success: false, result: "Compilation Error", message: error.stderr });
             } else if (error.type === "TLE") {
-                res.status(400).json({ success: false, error: "Time Limit Exceeded", stderr: error.stderr });
+                res.status(200).json({ success: false, result: "Time Limit Exceeded", message: error.stderr });
+            } else if (error.type === "MLE") {
+                res.status(200).json({ success: false, result: "Memory Limit Exceeded", message: error.stderr });
+            } else if (error.type === "runtime") {
+                res.status(200).json({ success: false, result: "Runtime Error", message: error.stderr });
             } else {
-                res.status(500).json({ success: false, message: "Failed to execute code!", error: error });
+                res.status(500).json({ success: false, result: "Internal Server Error", message: "Failed to execute code!" });
             }
+            cleanupFiles();
         }
     } catch (error) {
-        res.status(500).json({ success: false, message: "Failed to execute code!", error: error });
+        res.status(500).json({ success: false, result: "Internal Server Error", message: "Failed to execute code!" });
+        cleanupFiles();
     }
 });
 
@@ -201,26 +208,7 @@ router.post("/submit/:id", authenticate, async (req, res) => {
             try {
                 output = await executeCode(finalFilePath, language, inputPath);
             } catch (error) {
-                if (error.type === "runtime") {
-                    console.log(error);
-                    await Problem.findByIdAndUpdate(id, {
-                        $push: {
-                            submissions: {
-                                user: user.username,
-                                result: `Runtime Error on testcase ${i + 1}`,
-                                language,
-                                code,
-                                submissionDate: Date.now()
-                            },
-                        },
-                    });
-                    return res.status(200).json({
-                        success: false,
-                        status: `Runtime Error on testcase ${i + 1}`,
-                        error: error.error.message,
-                        stderr: error.stderr,
-                    });
-                } else if (error.type === "compilation") {
+                if (error.type === "compilation") {
                     await Problem.findByIdAndUpdate(id, {
                         $push: {
                             submissions: {
@@ -234,8 +222,8 @@ router.post("/submit/:id", authenticate, async (req, res) => {
                     });
                     return res.status(200).json({
                         success: false,
-                        status: "Compilation Error",
-                        error: error.error,
+                        result: "Compilation error",
+                        message: error.stderr,
                     });
                 } else if (error.type === "TLE") {
                     await Problem.findByIdAndUpdate(id, {
@@ -251,25 +239,48 @@ router.post("/submit/:id", authenticate, async (req, res) => {
                     });
                     return res.status(200).json({
                         success: false,
-                        status: `Time Limit Exceeded on testcase ${i + 1}`,
-                        error: error.stderr,
+                        result: `Time Limit Exceeded on testcase ${i + 1}`,
+                        message: error.stderr,
                     });
-                } else {
+                } else if (error.type === "MLE") {
                     await Problem.findByIdAndUpdate(id, {
                         $push: {
                             submissions: {
                                 user: user.username,
-                                result: "Execution Error",
+                                result: `Memory Limit Exceeded on testcase ${i + 1}`,
                                 language,
                                 code,
                                 submissionDate: Date.now()
                             },
                         },
                     });
+                    return res.status(200).json({
+                        success: false,
+                        result: `Memory Limit Exceeded on testcase ${i + 1}`,
+                        message: error.stderr,
+                    });
+                } else if (error.type === "runtime") {
+                    await Problem.findByIdAndUpdate(id, {
+                        $push: {
+                            submissions: {
+                                user: user.username,
+                                result: `Runtime error on testcase ${i + 1}`,
+                                language,
+                                code,
+                                submissionDate: Date.now()
+                            },
+                        },
+                    });
+                    return res.status(200).json({
+                        success: false,
+                        result: `Runtime error on testcase ${i + 1}`,
+                        message: error.stderr,
+                    });
+                } else {
                     return res.status(500).json({
                         success: false,
-                        status: `Failed to execute code on testcase ${i + 1}`,
-                        error: error,
+                        result: "Internal Server Error",
+                        message: `Failed to execute code on testcase ${i + 1}`
                     });
                 }
             }
@@ -288,9 +299,8 @@ router.post("/submit/:id", authenticate, async (req, res) => {
                 });
                 return res.status(200).json({
                     success: false,
-                    status: `Wrong Answer on testcase ${i + 1}`,
-                    expectedOutput: testCases[i].output.trim(),
-                    output: output.trim(),
+                    result: `Wrong Answer on testcase ${i + 1}`,
+                    message: `Expected Output:\n${testCases[i].output.trim()}\nYour Output:\n${output.trim()}`,
                 });
             }
         }
@@ -330,12 +340,11 @@ router.post("/submit/:id", authenticate, async (req, res) => {
             }
         });
 
-        res.status(200).json({ success: true, status: "Accepted" });
+        res.status(200).json({ success: true, result: "Accepted", message: "All test cases passed." });
 
-        // Clean up files after submission
         cleanupFiles();
     } catch (error) {
-        res.status(500).json({ success: false, message: "Failed to submit code!", error: error });
+        res.status(500).json({ success: false, result: "Internal Server Error", message: "Failed to submit code!" });
     }
 });
 

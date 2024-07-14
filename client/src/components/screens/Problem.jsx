@@ -402,7 +402,12 @@ int main() {
             }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            setOutput(response.data.output);
+
+            if(response.data.success) {
+                setOutput(response.data.result);
+            } else {
+                setOutput(`Result: ${response.data.result}\n${response.data.message}`);
+            }
             setError(null);
             setVerdict(null);
         } catch (error) {
@@ -426,7 +431,11 @@ int main() {
             }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            setVerdict(response.data.status);
+            if(response.data.success) {
+                setVerdict(response.data.result);
+            } else {
+                setVerdict(`Result: ${response.data.result}\n${response.data.message}`);
+            }
             setError(null);
             setOutput("");
         } catch (error) {
