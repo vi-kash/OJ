@@ -77,7 +77,7 @@ const executeCode = (filePath, language, inputPath, timeLimit = 5, memoryLimit =
             if (error) {
                 // console.log("error", error.code);
                 // console.log("stderr", stderr);
-                
+
                 if (error.code === 1) {
                     reject({ type: "compilation", stderr });
                 } else if (error.code === 137) {
@@ -159,10 +159,10 @@ router.post("/run", authenticate, async (req, res) => {
             } else {
                 res.status(500).json({ success: false, result: "Internal Server Error", message: "Failed to execute code!" });
             }
-            cleanupFiles();
         }
     } catch (error) {
         res.status(500).json({ success: false, result: "Internal Server Error", message: "Failed to execute code!" });
+    } finally {
         cleanupFiles();
     }
 });
@@ -341,10 +341,10 @@ router.post("/submit/:id", authenticate, async (req, res) => {
         });
 
         res.status(200).json({ success: true, result: "Accepted", message: "All test cases passed." });
-
-        cleanupFiles();
     } catch (error) {
         res.status(500).json({ success: false, result: "Internal Server Error", message: "Failed to submit code!" });
+    } finally {
+        cleanupFiles();
     }
 });
 
