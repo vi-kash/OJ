@@ -13,7 +13,12 @@ import executeRoute from "./routes/executeRoute.js";
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-app.use(cors());
+app.use(
+    cors({
+        origin: "www.online-judge.site",
+        credentials: true,
+    })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://13.127.122.1:8000";
+const API_URL = "https://backend.online-judge.site";
 
 const api = axios.create({
     baseURL: API_URL,
