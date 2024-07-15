@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 8000;
 
 app.use(
     cors({
-        origin: "www.online-judge.site",
+        origin: "https://www.online-judge.site",
         credentials: true,
     })
 );
