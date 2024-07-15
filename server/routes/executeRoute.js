@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import { authenticate } from "../middlewares/requireAuth.js";
 import fs from "fs";
@@ -56,18 +58,19 @@ const extractPublicClassName = (filePath) => {
 const executeCode = (filePath, language, inputPath, timeLimit = 5, memoryLimit = "256m") => {
     return new Promise((resolve, reject) => {
         let command;
+        const BASE_URL = process.env.AWS_BASE_URL;
         switch (language) {
             case "cpp":
-                command = `docker run --rm --memory=${memoryLimit} --cpus=1 --ulimit cpu=${timeLimit} --volume ${filePath}:/code/code.cpp --volume ${inputPath}:/input.txt cpp-docker sh -c "g++ /code/code.cpp -o /code/code.out && /code/code.out < /input.txt"`;
+                command = `docker run --rm --memory=${memoryLimit} --cpus=1 --ulimit cpu=${timeLimit} --volume ${filePath}:/code/code.cpp --volume ${inputPath}:/input.txt ${BASE_URL}/cpp-docker:latest sh -c "g++ /code/code.cpp -o /code/code.out && /code/code.out < /input.txt"`;
                 break;
             case "java":
-                command = `docker run --rm --memory=${memoryLimit} --cpus=1 --ulimit cpu=${timeLimit} --volume ${filePath}:/code/Main.java --volume ${inputPath}:/input.txt java-docker sh -c "javac /code/Main.java && java -cp /code Main < /input.txt"`;
+                command = `docker run --rm --memory=${memoryLimit} --cpus=1 --ulimit cpu=${timeLimit} --volume ${filePath}:/code/Main.java --volume ${inputPath}:/input.txt ${BASE_URL}/java-docker:latest sh -c "javac /code/Main.java && java -cp /code Main < /input.txt"`;
                 break;
             case "python":
-                command = `docker run --rm --memory=${memoryLimit} --cpus=1 --ulimit cpu=${timeLimit} --volume ${filePath}:/code/code.py --volume ${inputPath}:/code/input.txt python-docker`;
+                command = `docker run --rm --memory=${memoryLimit} --cpus=1 --ulimit cpu=${timeLimit} --volume ${filePath}:/code/code.py --volume ${inputPath}:/code/input.txt ${BASE_URL}/python-docker:latest`;
                 break;
             case "javascript":
-                command = `docker run --rm --memory=${memoryLimit} --cpus=1 --ulimit cpu=${timeLimit} --volume ${filePath}:/code/code.js --volume ${inputPath}:/code/input.txt node-docker`;
+                command = `docker run --rm --memory=${memoryLimit} --cpus=1 --ulimit cpu=${timeLimit} --volume ${filePath}:/code/code.js --volume ${inputPath}:/code/input.txt ${BASE_URL}/node-docker:latest`;
                 break;
             default:
                 reject(new Error("Unsupported language"));
