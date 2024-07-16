@@ -13,12 +13,15 @@ import executeRoute from "./routes/executeRoute.js";
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-app.use(
-    cors({
-        origin: "https://www.online-judge.site",
-        credentials: true,
-    })
-);
+const corsOptions = {
+    origin: "https://www.online-judge.site",
+    credentials: true,
+    optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
