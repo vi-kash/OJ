@@ -191,7 +191,18 @@ const EnhancedTable = () => {
                                                     </TableCell>
                                                     <TableCell align="left">{row.result}</TableCell>
                                                     <TableCell align="left">{row.language}</TableCell>
-                                                    <TableCell align="left">{new Date(row.submissionDate).toLocaleDateString()}</TableCell>
+                                                    <TableCell align="left">
+                                                        {new Date(row.submissionDate).toLocaleDateString(undefined, {
+                                                            year: 'numeric',
+                                                            month: 'long',
+                                                            day: 'numeric'
+                                                        })}{' '}
+                                                        {new Date(row.submissionDate).toLocaleTimeString(undefined, {
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                            second: '2-digit'
+                                                        })}
+                                                    </TableCell>
                                                     <TableCell align="left">
                                                         <IconButton
                                                             onClick={() => handleOpen(row.code, row.result)}
@@ -241,7 +252,7 @@ const EnhancedTable = () => {
                     </CardContent>
                 </Card>
             </Box>
-            <CodeModal open={open} handleClose={handleClose} code={currentCode} result={currentResult}/>
+            <CodeModal open={open} handleClose={handleClose} code={currentCode} result={currentResult} />
         </div>
     );
 };

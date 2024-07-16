@@ -25,6 +25,11 @@ const Dashboard = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
+        if (!response.data.user) {
+          navigate("/login");
+          return;
+        }
+
         setUser(response.data.user);
         setIsAdmin(response.data.user.role === "admin");
         setProblems(response.data.problems);
@@ -91,7 +96,16 @@ const Dashboard = () => {
                               {problem.language}
                             </td>
                             <td className="py-2 text-right">
-                              {new Date(problem.submissionDate).toLocaleDateString()}
+                              {new Date(problem.submissionDate).toLocaleDateString(undefined, {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}{' '}
+                              {new Date(problem.submissionDate).toLocaleTimeString(undefined, {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                              })}
                             </td>
                           </tr>
                         ))}

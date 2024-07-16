@@ -26,7 +26,13 @@ const SignIn = () => {
             try {
                 const token = localStorage.getItem("token");
                 if (token) {
-                    navigate("/");
+                    const response = await api.get("/me", {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    
+                    if(response.data.user) {
+                        navigate("/");
+                    }
                 }
             } catch (error) {
                 console.error("Authentication check failed:", error);
