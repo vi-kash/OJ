@@ -47,6 +47,16 @@ const EditQuestionForm = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
+                if (!response.data.user) {
+                    navigate("/login");
+                    return;
+                }
+
+                if(response.data.user.role !== "admin") {
+                    navigate("/");
+                    return;
+                }
+
                 setIsAuthenticated(true);
                 setIsAdmin(response.data.user.role === "admin");
             } catch (error) {

@@ -65,6 +65,15 @@ const EnhancedTable = () => {
                     return;
                 }
 
+                const response = await api.get("/me", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                if (!response.data.user) {
+                    navigate("/login");
+                    return;
+                }
+
                 const res = await api.get(`/problem/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
@@ -174,6 +183,9 @@ const EnhancedTable = () => {
                                                     tabIndex={-1}
                                                     key={row.id}
                                                     className="cursor-pointer hover:bg-gray-100"
+                                                    sx={{
+                                                        backgroundColor: row.result === "Accepted" ? "#c3e6cb" : "#f5c6cb",
+                                                    }}
                                                 >
                                                     <TableCell align="left">{row.user}</TableCell>
                                                     <TableCell

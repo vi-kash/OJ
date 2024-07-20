@@ -4,7 +4,20 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: {
+        type: String,
+        required: function () {
+            return !this.isOAuthUser;
+        }
+    },
+    isOAuthUser: {
+        type: Boolean,
+        default: false
+    },
+    googleId: String,
+    githubId: String,
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
     role: { type: String, default: "user" },
     registrationDate: { type: Date, default: Date.now },
     solvedProblems: [

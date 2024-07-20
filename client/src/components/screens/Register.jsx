@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
@@ -14,20 +15,112 @@ import { Google as GoogleIcon, GitHub as GitHubIcon } from "@mui/icons-material"
 import '@fontsource/roboto-slab';
 import api from "../../api.js";
 import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const defaultTheme = createTheme();
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const [emailSent, setEmailSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [email, setEmail] = useState("");
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordMatchError, setPasswordMatchError] = useState("");
+
+  const validatePassword = (password) => {
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return strongPasswordRegex.test(password);
+  };
+
+  const handlePasswordChange = (event) => {
+    const newPassword = event.target.value;
+    setPassword(newPassword);
+    if (!validatePassword(newPassword)) {
+      setPasswordError("Password must be at least 8 characters long, contain both lowercase and uppercase letters, include at least one numeric digit, and one special character.");
+    } else {
+      setPasswordError("");
+    }
+  };
+
+  const handleConfirmPasswordChange = (event) => {
+    const newConfirmPassword = event.target.value;
+    setConfirmPassword(newConfirmPassword);
+    if (newConfirmPassword !== password) {
+      setPasswordMatchError("Passwords do not match.");
+    } else {
+      setPasswordMatchError("");
+    }
+  };
+
+  const handleSendOtp = async () => {
+    try {
+      const response = await api.post("/send-otp", { email });
+      if (response.status === 200) {
+        setEmailSent(true);
+        toast.success("OTP sent to your email.");
+      }
+    } catch (error) {
+      if (error.response) {
+        switch (error.response.status) {
+          case 400:
+            toast.error(error.response.data.message);
+            break;
+          case 500:
+            toast.error("An error occurred while sending the OTP. Please try again.");
+            break;
+          default:
+            toast.error("Failed to send OTP. Please try again.");
+            break;
+        }
+      } else {
+        toast.error("Failed to send OTP. Please try again.");
+      }
+      console.error("Failed to send OTP. ", error);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    try {
+      const response = await api.post("/validate-otp", { email, otp });
+      if (response.status === 200) {
+        setOtpVerified(true);
+        toast.success("OTP verified.");
+      }
+    } catch (error) {
+      if (error.response) {
+        switch (error.response.status) {
+          case 400:
+            toast.error(error.response.data.message);
+            break;
+          case 500:
+            toast.error("An error occurred while verifying the OTP. Please try again.");
+            break;
+          default:
+            toast.error("Failed to verify OTP. Please try again.");
+            break;
+        }
+      } else {
+        toast.error("Failed to verify OTP. Please try again.");
+      }
+      console.error("Failed to verify OTP. ", error);
+    }
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
     const formData = new FormData(event.currentTarget);
     const userData = {
       name: `${formData.get("firstName")} ${formData.get("lastName")}`,
       username: formData.get("username"),
-      email: formData.get("email"),
-      password: formData.get("password"),
+      email,
+      password,
     };
 
     try {
@@ -59,22 +152,23 @@ const SignUp = () => {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    toast.info("Google sign-up is not implemented yet.");
+  const handleGoogleSignIn = async () => {
+    window.location.href = "https://backend.online-judge.site/auth/google";
   };
 
   const handleGitHubSignIn = () => {
-    toast.info("GitHub sign-up is not implemented yet.");
+    window.location.href = "https://backend.online-judge.site/auth/github";
   };
 
   return (
     <ThemeProvider theme={defaultTheme}>
       <div style={{
         backgroundColor: '#f0f4f8',
-        height: '100vh',
+        minHeight: '100vh',
         display: 'flex',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        padding: '15px',
       }}>
         <Container component="main" maxWidth="xs" style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
           <CssBaseline />
@@ -104,6 +198,32 @@ const SignUp = () => {
             </Typography>
             <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
               <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    required
+                    fullWidth
+                    id="email"
+                    label="Email Address"
+                    name="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={otpVerified}
+                  />
+                </Grid>
+                {emailSent && !otpVerified && (
+                  <Grid item xs={12}>
+                    <TextField
+                      required
+                      fullWidth
+                      id="otp"
+                      label="Enter OTP"
+                      name="otp"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                    />
+                  </Grid>
+                )}
                 <Grid item xs={12} sm={6}>
                   <TextField
                     autoComplete="given-name"
@@ -113,6 +233,7 @@ const SignUp = () => {
                     id="firstName"
                     label="First Name"
                     autoFocus
+                    disabled={!otpVerified}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -123,6 +244,7 @@ const SignUp = () => {
                     label="Last Name"
                     name="lastName"
                     autoComplete="family-name"
+                    disabled={!otpVerified}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -133,16 +255,7 @@ const SignUp = () => {
                     label="Username"
                     name="username"
                     autoComplete="username"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    id="email"
-                    label="Email Address"
-                    name="email"
-                    autoComplete="email"
+                    disabled={!otpVerified}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -154,17 +267,66 @@ const SignUp = () => {
                     type="password"
                     id="password"
                     autoComplete="new-password"
+                    value={password}
+                    onChange={handlePasswordChange}
+                    error={!!passwordError}
+                    helperText={passwordError}
+                    disabled={!otpVerified}
                   />
                 </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    required
+                    fullWidth
+                    name="confirmPassword"
+                    label="Confirm Password"
+                    type="password"
+                    id="confirmPassword"
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={handleConfirmPasswordChange}
+                    error={!!passwordMatchError}
+                    helperText={passwordMatchError}
+                    disabled={!otpVerified}
+                  />
+                </Grid>
+                {!emailSent && (
+                  <Grid item xs={12}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={handleSendOtp}
+                      sx={{ mt: 3, mb: 2 }}
+                    >
+                      Send OTP
+                    </Button>
+                  </Grid>
+                )}
+                {emailSent && !otpVerified && (
+                  <Grid item xs={12}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={handleVerifyOtp}
+                      sx={{ mt: 3, mb: 2 }}
+                    >
+                      Verify OTP
+                    </Button>
+                  </Grid>
+                )}
+                {otpVerified && (
+                  <Grid item xs={12}>
+                    <Button
+                      type="submit"
+                      fullWidth
+                      variant="contained"
+                      sx={{ mt: 3, mb: 2 }}
+                    >
+                      Sign Up
+                    </Button>
+                  </Grid>
+                )}
               </Grid>
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2 }}
-              >
-                Sign Up
-              </Button>
               <Grid container spacing={2} sx={{ mt: 1, mb: 2 }}>
                 <Grid item xs={12} sm={6}>
                   <Button

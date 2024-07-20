@@ -10,6 +10,11 @@ import AddQuestionForm from './components/screens/AddQuestionForm.jsx';
 import EditQuestionForm from './components/screens/EditQuestionForm.jsx';
 import MySubmissions from "./components/screens/MySubmissions.jsx";
 import AllSubmissions from "./components/screens/AllSubmissions.jsx";
+import AuthCallback from './components/screens/AuthCallback.jsx';
+import ForgotPassword from './components/screens/ForgotPassword.jsx';
+import UpdateProfile from './components/screens/UpdateProfile.jsx';
+import UpdateEmail from './components/screens/UpdateEmail.jsx';
+import ChangePassword from './components/screens/ChangePassword.jsx';
 import './App.css';
 
 const App = () => {
@@ -26,6 +31,11 @@ const App = () => {
                 <Route path="/editProblem/:id" element={<EditQuestionForm />} />
                 <Route path="/mySubmissions/:id" element={<MySubmissions />} />
                 <Route path="/allSubmissions/:id" element={<AllSubmissions />} />
+                <Route path="/auth/callback/:token" element={<AuthCallback />} />
+                <Route path="/forgotPassword" element={<ForgotPassword />} />
+                <Route path="/updateProfile" element={<UpdateProfile />} />
+                <Route path="/updateEmail" element={<UpdateEmail />} />
+                <Route path="/changePassword" element={<ChangePassword />} />
             </Routes>
         </BrowserRouter>
     );

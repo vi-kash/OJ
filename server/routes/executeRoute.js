@@ -78,9 +78,6 @@ const executeCode = (filePath, language, inputPath, timeLimit = 5, memoryLimit =
 
         exec(command, (error, stdout, stderr) => {
             if (error) {
-                // console.log("error", error.code);
-                // console.log("stderr", stderr);
-
                 if (error.code === 1) {
                     reject({ type: "compilation", stderr });
                 } else if (error.code === 137) {

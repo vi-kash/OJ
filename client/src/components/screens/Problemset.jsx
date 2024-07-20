@@ -17,6 +17,7 @@ import Tooltip from "@mui/material/Tooltip";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import { Button, Card, CardContent, InputBase } from "@mui/material";
 import { visuallyHidden } from "@mui/utils";
 import { useNavigate, Link } from "react-router-dom";
@@ -49,6 +50,7 @@ const EnhancedTable = () => {
 
     const navigate = useNavigate();
     const [user, setUser] = React.useState(null);
+    const [solvedProblems, setSolvedProblems] = React.useState([]);
 
     React.useEffect(() => {
         const fetchData = async () => {
@@ -63,7 +65,13 @@ const EnhancedTable = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
+                if (!response.data.user) {
+                    navigate("/login");
+                    return;
+                }
+
                 setUser(response.data.user);
+                setSolvedProblems(response.data.problems);
 
                 const res = await api.get("/problems", {
                     headers: { Authorization: `Bearer ${token}` },
@@ -155,6 +163,7 @@ const EnhancedTable = () => {
                                     <TableBody>
                                         {visibleRows.map((row, index) => {
                                             const labelId = `enhanced-table-checkbox-${index}`;
+                                            const isSolved = solvedProblems.some(problem => problem.id === row._id);
 
                                             return (
                                                 <TableRow
@@ -175,6 +184,12 @@ const EnhancedTable = () => {
                                                         >
                                                             {row.title}
                                                         </Link>
+                                                        {isSolved && (
+                                                            <TaskAltIcon
+                                                                fontSize="small"
+                                                                sx={{ color: "green", ml: 1 }}
+                                                            />
+                                                        )}
                                                     </TableCell>
                                                     <TableCell align="left">{row.difficulty}</TableCell>
                                                     <TableCell align="left">{row.accuracy}</TableCell>

@@ -15,6 +15,7 @@ import { Google as GoogleIcon, GitHub as GitHubIcon } from "@mui/icons-material"
 import '@fontsource/roboto-slab';
 import api from "../../api.js";
 import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const defaultTheme = createTheme();
 
@@ -85,24 +86,23 @@ const SignIn = () => {
         }
     };
 
-    const handleGoogleSignIn = () => {
-        // Implement Google sign-in logic
-        toast.info("Google sign-in is not implemented yet.");
+    const handleGoogleSignIn = async () => {
+        window.location.href = "https://backend.online-judge.site/auth/google";
     };
 
     const handleGitHubSignIn = () => {
-        // Implement GitHub sign-in logic
-        toast.info("GitHub sign-in is not implemented yet.");
+        window.location.href = "https://backend.online-judge.site/auth/github";
     };
 
     return (
         <ThemeProvider theme={defaultTheme}>
             <div style={{
                 backgroundColor: '#f0f4f8',
-                height: '100vh',
+                minHeight: '100vh',
                 display: 'flex',
                 justifyContent: 'center',
-                alignItems: 'center'
+                alignItems: 'center',
+                padding: '15px'
             }}>
                 <Container component="main" maxWidth="xs" style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
                     <CssBaseline />
@@ -201,7 +201,7 @@ const SignIn = () => {
                             </Grid>
                             <Grid container sx={{ mt: 3 }}>
                                 <Grid item xs>
-                                    <Link href="#" variant="body2">
+                                    <Link href="/forgotPassword" variant="body2">
                                         Forgot password?
                                     </Link>
                                 </Grid>

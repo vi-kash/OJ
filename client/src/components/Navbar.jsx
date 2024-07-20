@@ -11,21 +11,23 @@ import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import CodeIcon from "@mui/icons-material/Code";
 import LogoutIcon from '@mui/icons-material/Logout';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { useNavigate } from "react-router-dom";
 import api from "../api.js";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import '@fontsource/roboto'; 
-import '@fontsource/roboto-slab'; 
+import '@fontsource/roboto';
+import '@fontsource/roboto-slab';
 
 const pages = [
     { name: "Dashboard", route: "/" },
     { name: "Problems", route: "/problemset" },
-    { name: "Contests", route: "/contests" },
+    { name: "Contests", route: "#" },
 ];
 
 function ResponsiveAppBar() {
     const [anchorElNav, setAnchorElNav] = React.useState(null);
+    const [anchorElUser, setAnchorElUser] = React.useState(null);
     const navigate = useNavigate();
 
     const handleOpenNavMenu = (event) => {
@@ -34,6 +36,14 @@ function ResponsiveAppBar() {
 
     const handleCloseNavMenu = () => {
         setAnchorElNav(null);
+    };
+
+    const handleOpenUserMenu = (event) => {
+        setAnchorElUser(event.currentTarget);
+    };
+
+    const handleCloseUserMenu = () => {
+        setAnchorElUser(null);
     };
 
     const handleLogout = async () => {
@@ -136,12 +146,46 @@ function ResponsiveAppBar() {
                         ))}
                     </Box>
 
-                    <Box sx={{ flexGrow: 0 }} onClick={handleLogout}>
-
-                        <Button variant="outlined" color="error">
-                            {<LogoutIcon />}
-                            Logout
-                        </Button>
+                    <Box sx={{ flexGrow: 0 }}>
+                        <IconButton
+                            size="large"
+                            aria-label="user menu"
+                            aria-controls="menu-user"
+                            aria-haspopup="true"
+                            onClick={handleOpenUserMenu}
+                            color="inherit"
+                        >
+                            <AccountCircleIcon />
+                        </IconButton>
+                        <Menu
+                            id="menu-user"
+                            anchorEl={anchorElUser}
+                            anchorOrigin={{
+                                vertical: "top",
+                                horizontal: "right",
+                            }}
+                            keepMounted
+                            transformOrigin={{
+                                vertical: "top",
+                                horizontal: "right",
+                            }}
+                            open={Boolean(anchorElUser)}
+                            onClose={handleCloseUserMenu}
+                        >
+                            <MenuItem onClick={() => { handleCloseUserMenu(); navigate("/updateProfile"); }}>
+                                <Typography textAlign="center">Update Profile</Typography>
+                            </MenuItem>
+                            <MenuItem onClick={() => { handleCloseUserMenu(); navigate("/updateEmail"); }}>
+                                <Typography textAlign="center">Update Email</Typography>
+                            </MenuItem>
+                            <MenuItem onClick={() => { handleCloseUserMenu(); navigate("/changePassword"); }}>
+                                <Typography textAlign="center">Change Password</Typography>
+                            </MenuItem>
+                            <MenuItem onClick={handleLogout}>
+                                <LogoutIcon sx={{ mr: 1 }} />
+                                <Typography textAlign="center">Logout</Typography>
+                            </MenuItem>
+                        </Menu>
                     </Box>
                 </Toolbar>
             </Container>

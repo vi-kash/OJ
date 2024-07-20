@@ -9,6 +9,9 @@ import problemRoute from "./routes/problemRoute.js";
 import contestRoute from "./routes/contestRoute.js";
 import userRoute from "./routes/userRoute.js";
 import executeRoute from "./routes/executeRoute.js";
+import passport from "passport";
+import session from "express-session";
+import "./config/passportConfig.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -24,6 +27,18 @@ app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(
+    session({
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: true,
+    })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(cookieParser());
 app.use(auth);
 app.use(problemRoute);

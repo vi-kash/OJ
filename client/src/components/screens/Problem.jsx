@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -19,6 +20,8 @@ import Navbar from "../Navbar.jsx";
 import { Editor } from "@monaco-editor/react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import Box from "@mui/material/Box";
 
 const Problem = () => {
     const { id } = useParams();
@@ -27,11 +30,29 @@ const Problem = () => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isSolved, setIsSolved] = useState(false);
 
     useEffect(() => {
         const fetchProblem = async () => {
             try {
                 const token = localStorage.getItem("token");
+                if (!token) {
+                    navigate("/login");
+                    return;
+                }
+
+                const res = await api.get("/me", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                if (!res.data.user) {
+                    navigate("/login");
+                    return;
+                }
+
+                const isSolved = res.data.problems.some(problem => problem.id === id);
+                setIsSolved(isSolved);
+
                 const response = await api.get(`/problem/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
@@ -58,7 +79,7 @@ const Problem = () => {
 
         fetchProblem();
         checkAdminStatus();
-    }, [id]);
+    }, [id, navigate]);
 
     const handleDelete = async () => {
         try {
@@ -126,17 +147,30 @@ const Problem = () => {
                             overflow: "auto",
                         }}
                     >
-                        <Typography
-                            variant="h4"
-                            component="h1"
-                            gutterBottom
-                            style={{
-                                fontFamily: "Roboto Slab, serif",
-                                fontWeight: "bold",
-                            }}
-                        >
-                            {problem.title}
-                        </Typography>
+                        <Box display="flex" alignItems="center" justifyContent="space-between">
+                            <Typography
+                                variant="h4"
+                                component="h1"
+                                gutterBottom
+                                style={{
+                                    fontFamily: "Roboto Slab, serif",
+                                    fontWeight: "bold",
+                                }}
+                            >
+                                {problem.title}
+                            </Typography>
+                            {isSolved && (
+                                <Box display="flex" alignItems="center" ml={2}>
+                                    <Typography variant="h6" component="span">
+                                        Solved
+                                    </Typography>
+                                    <TaskAltIcon
+                                        fontSize="small"
+                                        sx={{ color: "green", ml: 1 }}
+                                    />
+                                </Box>
+                            )}
+                        </Box>
                         <Card
                             elevation={2}
                             style={{
@@ -371,21 +405,34 @@ const Problem = () => {
 };
 
 const CodeEditorComponent = ({ problem }) => {
-    const [code, setCode] = useState(
-        `#include <bits/stdc++.h>
-using namespace std;
-
-int main() {
-    cout << "Hello, World!" << endl;
-    return 0;
-}`
-    );
+    const [code, setCode] = useState('');
     const [language, setLanguage] = useState("cpp");
     const [input, setInput] = useState(problem.sampleInput || "");
     const [output, setOutput] = useState("");
     const [verdict, setVerdict] = useState(null);
     const [running, setRunning] = useState(false);
     const [error, setError] = useState(null);
+
+    const defaultCodes = {
+        javascript: `console.log('Hello, World!');`,
+        java: `public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}`,
+        cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+    cout << "Hello, World!" << endl;
+    return 0;
+}`,
+        python: `print("Hello, World!")`,
+    };
+
+    useEffect(() => {
+        setCode(defaultCodes[language]);
+    }, [language]);
 
     const handleLanguageChange = (event) => {
         setLanguage(event.target.value);
@@ -403,7 +450,7 @@ int main() {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
-            if(response.data.success) {
+            if (response.data.success) {
                 setOutput(response.data.result);
             } else {
                 setOutput(`Result: ${response.data.result}\n${response.data.message}`);
@@ -431,7 +478,7 @@ int main() {
             }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            if(response.data.success) {
+            if (response.data.success) {
                 setVerdict(response.data.result);
             } else {
                 setVerdict(`Result: ${response.data.result}\n${response.data.message}`);
@@ -467,9 +514,9 @@ int main() {
                 </FormControl>
             </div>
             <Editor
-                height="600px"
+                height="500px"
                 defaultLanguage={language}
-                defaultValue={code}
+                value={code}
                 onChange={(value) => setCode(value)}
                 theme="vs-dark"
                 options={{
